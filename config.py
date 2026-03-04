@@ -35,6 +35,9 @@ class Config:
     MAIL_DEFAULT_SENDER = 'maintenancesysteme05@gmail.com'
     
     # Email Settings
+
+
+
     EMAILS_ENABLED = True
     
     # Application Settings
@@ -69,5 +72,5 @@ config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
-    'default': DevelopmentConfig
+    'default': DevelopmentConfig 
 }

@@ -16,32 +16,38 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `dashboard_kpis`
+-- Table structure for table `demand_approvals`
 --
 
-DROP TABLE IF EXISTS `dashboard_kpis`;
+DROP TABLE IF EXISTS `demand_approvals`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dashboard_kpis` (
+CREATE TABLE `demand_approvals` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `kpi_name` varchar(100) DEFAULT NULL,
-  `kpi_value` int DEFAULT NULL,
-  `kpi_date` date DEFAULT NULL,
+  `demand_id` int NOT NULL,
+  `approval_level` varchar(50) NOT NULL,
+  `approver_id` int DEFAULT NULL,
+  `approval_status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `approval_date` datetime DEFAULT NULL,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_kpi_name` (`kpi_name`),
-  KEY `idx_kpi_date` (`kpi_date`)
+  KEY `idx_demand_id` (`demand_id`),
+  KEY `idx_approver_id` (`approver_id`),
+  KEY `idx_approval_level` (`approval_level`),
+  KEY `idx_approval_status` (`approval_status`),
+  CONSTRAINT `demand_approvals_ibfk_1` FOREIGN KEY (`demand_id`) REFERENCES `spare_parts_demands` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `demand_approvals_ibfk_2` FOREIGN KEY (`approver_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `dashboard_kpis`
+-- Dumping data for table `demand_approvals`
 --
 
-LOCK TABLES `dashboard_kpis` WRITE;
-/*!40000 ALTER TABLE `dashboard_kpis` DISABLE KEYS */;
-/*!40000 ALTER TABLE `dashboard_kpis` ENABLE KEYS */;
+LOCK TABLES `demand_approvals` WRITE;
+/*!40000 ALTER TABLE `demand_approvals` DISABLE KEYS */;
+/*!40000 ALTER TABLE `demand_approvals` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -52,4 +58,5 @@ UNLOCK TABLES;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
--- Dump completed on 2026-03-02 11:54:23
+
+-- Dump completed on 2026-03-02 11:54:20

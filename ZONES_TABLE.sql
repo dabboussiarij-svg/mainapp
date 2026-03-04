@@ -26,4 +26,5 @@ INSERT INTO zones (name, description, location) VALUES
 ('Zone E', 'Logistics area', 'Floor 3');
 
 -- Update users table to use zone reference (if needed for foreign key)
--- ALTER TABLE users ADD FOREIGN KEY (zone) REFERENCES zones(name) ON DELETE SET NULL;
+-- ALTER TABLE users ADD FOREIGN KEY (zone) REFERENCES zones(name) ON
+ DELETE SET NULL;
