@@ -4,9 +4,16 @@ Main Application Entry Point
 """
 
 import os
+import threading
+import click
+import time
 from app import create_app, db
-from app.models import User, Material, Machine, MaintenanceSchedule, MaintenanceReport
-from app.models import SparePartsDemand, StockMovement, StockAlert, MaterialReturn
+from app.models import (
+    User, Material, Machine, MaintenanceSchedule, MaintenanceReport,
+    SparePartsDemand, StockMovement, StockAlert, MaterialReturn,
+    PreventiveMaintenancePlan, PreventiveMaintenanceTask,
+    PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution
+)
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -29,6 +36,10 @@ def make_shell_context():
         'StockMovement': StockMovement,
         'StockAlert': StockAlert,
         'MaterialReturn': MaterialReturn,
+        'PreventiveMaintenancePlan': PreventiveMaintenancePlan,
+        'PreventiveMaintenanceTask': PreventiveMaintenanceTask,
+        'PreventiveMaintenanceExecution': PreventiveMaintenanceExecution,
+        'PreventiveMaintenanceTaskExecution': PreventiveMaintenanceTaskExecution,
     }
 
 @app.cli.command()
@@ -103,6 +114,38 @@ def seed_db():
     
     db.session.commit()
     print('Database seeded with sample users!')
+
+@app.cli.command('test-reminder')
+@click.argument('demand_id', type=int)
+def test_reminder(demand_id):
+    """Send an immediate supervisor-reminder for a demand and schedule repeats every minute."""
+    from app.email_service import EmailService
+    with app.app_context():
+        demand = SparePartsDemand.query.get(demand_id)
+        if not demand:
+            print(f"Demand {demand_id} not found.")
+            return
+        if not demand.supervisor_id:
+            print("Demand has no supervisor assigned; cannot send reminder.")
+            return
+        supervisor = User.query.get(demand.supervisor_id)
+        if not supervisor:
+            print("Supervisor user record not found.")
+            return
+        EmailService.send_supervisor_approval_request(demand, supervisor)
+        print(f"Initial reminder sent to {supervisor.email}. Scheduling repeats every 60 seconds (with countdown).")
+        def send_again():
+            with app.app_context():
+                fresh = SparePartsDemand.query.get(demand_id)
+                if fresh and fresh.demand_status in ['pending', 'supervisor_review']:
+                    # countdown loop for visibility
+                    for remaining in range(60, 0, -1):
+                        print(f"[Test] sending again in {remaining} second{'s' if remaining != 1 else ''}...")
+                        time.sleep(1)
+                    EmailService.send_supervisor_approval_request(fresh, supervisor)
+                    print(f"[Test] reminder resent for demand {fresh.demand_number}")
+                    threading.Timer(60, send_again).start()
+        threading.Timer(60, send_again).start()
 
 if __name__ == '__main__':
     with app.app_context():
