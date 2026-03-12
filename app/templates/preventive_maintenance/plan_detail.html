@@ -182,7 +182,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for exec in plan.executions|sort(attribute='scheduled_date', reverse=True)|list[:10] %}
+                    {% set sorted_execs = plan.executions|sort(attribute='scheduled_date', reverse=True)|list %}
+                    {% for exec in sorted_execs[:10] %}
                     <tr>
                         <td>{{ exec.scheduled_date.strftime('%Y-%m-%d') }}</td>
                         <td>{{ exec.technician.full_name if exec.technician else 'Unassigned' }}</td>

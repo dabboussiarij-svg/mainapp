@@ -40,14 +40,6 @@ def dashboard():
             'roles': ['admin', 'supervisor', 'technician'],
             'color': '#10b981'
         },
-        'preventive_maintenance': {
-            'title': 'Preventive Maintenance',
-            'icon': 'calendar-check',
-            'description': 'Plan and execute preventive maintenance tasks',
-            'url': 'preventive.index',
-            'roles': ['admin', 'supervisor', 'technician'],
-            'color': '#8b5cf6'
-        },
         'demands': {
             'title': 'Spare Parts Demands',
             'icon': 'cart-check',

@@ -27,6 +27,8 @@ class DemandStatus(Enum):
     REJECTED = 'rejected'
     PARTIAL_ALLOCATED = 'partial_allocated'
     FULFILLED = 'fulfilled'
+    CANCELLED = 'cancelled'
+    ARCHIVED = 'archived'
 
 class ApprovalStatus(Enum):
     PENDING = 'pending'
@@ -313,9 +315,11 @@ class SparePartsDemand(db.Model):
         elif self.demand_status == 'stock_agent_review':
             return 60
         elif self.demand_status == 'approved_stock_agent':
-            return 80
+            return 100  # Finished - ready for archive
         elif self.demand_status == 'fulfilled':
-            return 100
+            return 100  # Complete
+        elif self.demand_status == 'archived':
+            return 100  # Archived
         return 0
 
 class StockMovement(db.Model):
@@ -472,8 +476,8 @@ class PreventiveMaintenancePlan(db.Model):
     
     # Relationships
     machine = db.relationship('Machine', backref='preventive_plans')
-    tasks = db.relationship('PreventiveMaintenanceTask', backref='plan', cascade='all, delete-orphan')
-    executions = db.relationship('PreventiveMaintenanceExecution', backref='plan', cascade='all, delete-orphan')
+    tasks = db.relationship('PreventiveMaintenanceTask', backref='maintenance_plan', cascade='all, delete-orphan')
+    # Note: 'executions' relationship is created via backref from PreventiveMaintenanceExecution.plan
     created_by = db.relationship('User', backref='created_preventive_plans', foreign_keys=[created_by_id])
     
     def __repr__(self):
@@ -492,6 +496,7 @@ class PreventiveMaintenanceTask(db.Model):
     required_materials = db.Column(db.Text)  # Comma-separated or JSON list
     safety_precautions = db.Column(db.Text)
     notes = db.Column(db.Text)
+    method = db.Column(db.String(10), default='N')  # N (Visual), I (Manual), O (Sensor)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

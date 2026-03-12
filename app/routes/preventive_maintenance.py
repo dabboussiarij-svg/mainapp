@@ -231,10 +231,11 @@ def schedule_execution(plan_id):
         scheduled_date = datetime.strptime(request.form.get('scheduled_date'), '%Y-%m-%d').date()
         assigned_technician_id = request.form.get('assigned_technician_id')
         assigned_supervisor_id = request.form.get('assigned_supervisor_id', session['user_id'])
+        machine_id = request.form.get('machine_id')  # Get machine from form selection
         
         execution = PreventiveMaintenanceExecution(
             plan_id=plan_id,
-            machine_id=plan.machine_id,
+            machine_id=machine_id,  # Use selected machine, not plan's machine
             scheduled_date=scheduled_date,
             assigned_supervisor_id=assigned_supervisor_id or None,
             assigned_technician_id=assigned_technician_id or None,
@@ -259,15 +260,17 @@ def schedule_execution(plan_id):
         flash('Preventive maintenance execution scheduled successfully!', 'success')
         return redirect(url_for('preventive.execution_detail', execution_id=execution.id))
     
-    # Get available technicians and supervisors
+    # Get available technicians, supervisors, and machines
     technicians = User.query.filter_by(role='technician', status='active').all()
     supervisors = User.query.filter_by(role='supervisor', status='active').all()
+    machines = Machine.query.filter_by(status='active').all()
     
     return render_template(
         'preventive_maintenance/schedule_execution.html',
         plan=plan,
         technicians=technicians,
-        supervisors=supervisors
+        supervisors=supervisors,
+        machines=machines
     )
 
 @preventive_bp.route('/execution/<int:execution_id>')
@@ -484,13 +487,18 @@ def reject_execution(execution_id):
 @login_required
 def calendar():
     """Calendar view for preventive maintenance schedules"""
+    from sqlalchemy.orm import joinedload
+    
     user = User.query.get(session['user_id'])
     machine_id = request.args.get('machine_id', '')
     
     machines = Machine.query.filter_by(status='active').all()
     
     # Get all upcoming and past executions
-    query = PreventiveMaintenanceExecution.query
+    query = PreventiveMaintenanceExecution.query.options(
+        joinedload(PreventiveMaintenanceExecution.machine),
+        joinedload(PreventiveMaintenanceExecution.plan)
+    )
     
     if machine_id:
         query = query.filter_by(machine_id=machine_id)
@@ -514,10 +522,15 @@ def calendar():
 @login_required
 def calendar_api():
     """API endpoint for calendar events"""
+    from sqlalchemy.orm import joinedload
+    
     user = User.query.get(session['user_id'])
     machine_id = request.args.get('machine_id', '')
     
-    query = PreventiveMaintenanceExecution.query
+    query = PreventiveMaintenanceExecution.query.options(
+        joinedload(PreventiveMaintenanceExecution.machine),
+        joinedload(PreventiveMaintenanceExecution.plan)
+    )
     
     if machine_id:
         query = query.filter_by(machine_id=machine_id)

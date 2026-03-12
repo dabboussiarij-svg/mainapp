@@ -71,8 +71,9 @@
 
     <!-- Tasks Execution Table -->
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Maintenance Tasks</h5>
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Maintenance Tasks ({{ task_executions|length }} total)</h5>
+            <span class="badge badge-light" id="completedCount">0 Completed</span>
         </div>
         <div class="card-body">
             {% if not task_executions %}
@@ -84,6 +85,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Task Description</th>
+                                <th>Method</th>
                                 <th>Est. Duration</th>
                                 <th>Status</th>
                                 <th>Actual Duration</th>
@@ -100,6 +102,11 @@
                                     {% if task_exec.task.category %}
                                         <br><small class="text-muted">{{ task_exec.task.category }}</small>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ 'primary' if task_exec.task.method == 'N' else 'info' if task_exec.task.method == 'I' else 'warning' }}" title="{% if task_exec.task.method == 'N' %}Visual (Visuel){% elif task_exec.task.method == 'I' %}Manual (Manuel){% elif task_exec.task.method == 'O' %}Sensor (Capteur){% endif %}">
+                                        {{ task_exec.task.method or 'N' }}
+                                    </span>
                                 </td>
                                 <td>{{ task_exec.task.estimated_duration_minutes }} min</td>
                                 <td>
@@ -624,6 +631,7 @@ document.getElementById('confirmEndTask').addEventListener('click', () => {
             document.getElementById('endTaskForm').reset();
             
             attachEventListeners();
+            updateCompletedCount();
             
             // Show success message
             alert('Task completed successfully!');
@@ -660,6 +668,7 @@ document.getElementById('confirmSkipTask').addEventListener('click', () => {
             document.getElementById('skipTaskForm').reset();
             
             attachEventListeners();
+            updateCompletedCount();
             
             alert('Task skipped successfully!');
         }
@@ -674,7 +683,26 @@ document.getElementById('issues_found').addEventListener('change', function() {
 });
 
 // Attach event listeners on load
-document.addEventListener('DOMContentLoaded', attachEventListeners);
+document.addEventListener('DOMContentLoaded', function() {
+    attachEventListeners();
+    updateCompletedCount();
+});
+
+// Update completed task count
+function updateCompletedCount() {
+    const completed = document.querySelectorAll('tbody tr td:nth-child(4) span:contains("COMPLETED")').length;
+    const completedCount = document.querySelectorAll('tbody .badge-success').length;
+    // Count tasks with status "completed"
+    const taskRows = document.querySelectorAll('tbody tr');
+    let count = 0;
+    taskRows.forEach(row => {
+        const statusSpan = row.querySelector('td:nth-child(4) span');
+        if (statusSpan && statusSpan.textContent.includes('COMPLETED')) {
+            count++;
+        }
+    });
+    document.getElementById('completedCount').textContent = count + ' Completed';
+}
 </script>
 
 <style>
