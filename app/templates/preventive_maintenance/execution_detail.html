@@ -11,6 +11,9 @@
             <p class="text-muted">{{ execution.plan.plan_name }} - {{ execution.machine.name }}</p>
         </div>
         <div class="col-md-4 text-right">
+            <button class="btn btn-sm btn-info" id="refreshButton" title="Refresh durations from server">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
             <span class="badge badge-{{ 'success' if execution.status == 'completed' else 'warning' if execution.status == 'started' else 'info' }}">
                 {{ execution.status.upper() }}
             </span>
@@ -133,24 +136,24 @@
                                 <td>
                                     {% if can_edit and execution.status != 'completed' %}
                                         {% if task_exec.status == 'pending' %}
-                                            <button class="btn btn-sm btn-success start-task" data-task-id="{{ task_exec.id }}">
+                                            <button type="button" class="btn btn-sm btn-success" onclick="startTask(event, {{ task_exec.id }})">
                                                 <i class="fas fa-play"></i> Start
                                             </button>
                                         {% elif task_exec.status == 'in_progress' %}
-                                            <button class="btn btn-sm btn-primary end-task" data-task-id="{{ task_exec.id }}">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="endTask(event, {{ task_exec.id }})">
                                                 <i class="fas fa-stop"></i> End
                                             </button>
-                                            <button class="btn btn-sm btn-warning skip-task" data-task-id="{{ task_exec.id }}">
+                                            <button type="button" class="btn btn-sm btn-warning" onclick="skipTask(event, {{ task_exec.id }})">
                                                 <i class="fas fa-forward"></i> Skip
                                             </button>
                                         {% elif task_exec.status == 'completed' %}
-                                            <button class="btn btn-sm btn-info view-task" data-task-id="{{ task_exec.id }}">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="viewTask(event, {{ task_exec.id }})">
                                                 <i class="fas fa-eye"></i> View
                                             </button>
                                         {% endif %}
                                     {% else %}
                                         {% if task_exec.status == 'completed' %}
-                                            <button class="btn btn-sm btn-info view-task" data-task-id="{{ task_exec.id }}">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="viewTask(event, {{ task_exec.id }})">
                                                 <i class="fas fa-eye"></i> View
                                             </button>
                                         {% else %}
@@ -467,65 +470,184 @@
 // Timer references
 let taskTimers = {};
 
-// Start Task
-document.querySelectorAll('.start-task').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const taskId = this.dataset.taskId;
-        fetch(`{{ url_for('preventive.start_task', task_exec_id=999999) }}`.replace('999999', taskId), {
+// Start Task - Direct function call with complete safeguards
+function startTask(event, taskId) {
+    console.log('=== START TASK CLICKED ===');
+    console.log('Task ID:', taskId);
+    console.log('Event:', event);
+    
+    // CRITICAL: Prevent all default behaviors
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        console.log('✓ Event handlers blocked');
+    }
+    
+    // Show that we're processing
+    console.log('✓ Starting fetch request...');
+    
+    try {
+        const startUrl = `{{ url_for('preventive.start_task', task_exec_id=999999) }}`.replace('999999', taskId);
+        console.log('Fetching URL:', startUrl);
+        
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        
+        fetch(startUrl + '?_t=' + timestamp, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
         })
-        .then(r => r.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('ERROR: Response is not JSON! Content-Type:', contentType);
+                return response.text().then(text => {
+                    console.error('Response body:', text);
+                    throw new Error('Server returned ' + response.status + ': ' + (text.substring(0, 100)));
+                });
+            }
+            
+            if (!response.ok) {
+                console.error('Response not OK, status:', response.status);
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
+            
             if (data.success) {
-                // Update UI
+                console.log('✓ Task started successfully!');
+                
+                // IMPORTANT: Show visual feedback that task started
                 const row = document.getElementById('task-' + taskId);
+                if (row) {
+                    row.style.backgroundColor = '#fff3cd';
+                    console.log('✓ Row highlighted in yellow');
+                }
+                
+                // Update UI
+                if (!row) {
+                    console.error('Row not found:', 'task-' + taskId);
+                    alert('ERROR: Could not find task row. Task ID: ' + taskId);
+                    return;
+                }
+                
+                console.log('Updating row:', row);
                 row.classList.add('table-warning');
+                
                 const statusCell = row.querySelector('td:nth-child(4) span');
-                statusCell.textContent = 'IN PROGRESS';
-                statusCell.className = 'badge badge-warning';
+                if (statusCell) {
+                    statusCell.textContent = 'IN PROGRESS';
+                    statusCell.className = 'badge badge-warning';
+                    console.log('✓ Status cell updated to IN PROGRESS');
+                }
                 
                 // Replace buttons
                 const actionsCell = row.querySelector('td:last-child');
-                actionsCell.innerHTML = `
-                    <button class="btn btn-sm btn-primary end-task" data-task-id="${taskId}">
-                        <i class="fas fa-stop"></i> End
-                    </button>
-                    <button class="btn btn-sm btn-warning skip-task" data-task-id="${taskId}">
-                        <i class="fas fa-forward"></i> Skip
-                    </button>
-                `;
+                if (actionsCell) {
+                    actionsCell.innerHTML = `
+                        <button type="button" class="btn btn-sm btn-primary" onclick="endTask(event, ${taskId})">
+                            <i class="fas fa-stop"></i> End
+                        </button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="skipTask(event, ${taskId})">
+                            <i class="fas fa-forward"></i> Skip
+                        </button>
+                    `;
+                    console.log('✓ Action buttons replaced with End/Skip');
+                }
                 
                 // Start timer
                 startTaskTimer(taskId, data.start_time);
+                console.log('✓ Timer started');
                 
-                // Re-attach event listeners
-                attachEventListeners();
+                // Show alert to user
+                alert('✓ Task #' + taskId + ' started successfully!');
+            } else {
+                console.error('✗ Server error:', data.error);
+                alert('ERROR starting task: ' + (data.error || 'Unknown error'));
             }
         })
-        .catch(e => console.error('Error:', e));
-    });
-});
+        .catch(e => {
+            console.error('Fetch error:', e);
+            alert('Error starting task. Please check console for details.');
+        });
+    } catch (err) {
+        console.error('Exception:', err);
+        alert('Exception: ' + err.message);
+    }
+    
+    console.log('=== RETURNING FALSE - ABSOLUTELY NO PAGE NAVIGATION ===');
+    return false;
+}
 
-// Start timer for a task
+// Attach listeners for buttons created from HTML (for backwards compatibility)
+function attachStartTaskListeners() {
+    document.querySelectorAll('.start-task').forEach(btn => {
+        btn.removeEventListener('click', handleStartTask);
+        btn.addEventListener('click', handleStartTask);
+    });
+}
+
+function handleStartTask(e) {
+    const taskId = this.dataset.taskId;
+    startTask(e, taskId);
+}
+
+// Start timer for a task - fetch duration from server every second
 function startTaskTimer(taskId, startTime) {
-    const startTimestamp = new Date(startTime).getTime();
     const durationElement = document.getElementById('duration-' + taskId);
     
+    // Fetch duration immediately
+    updateTaskDurationFromServer(taskId);
+    
+    // Then update every second from server for real-time accuracy
     taskTimers[taskId] = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        durationElement.textContent = `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+        updateTaskDurationFromServer(taskId);
     }, 1000);
+}
+
+// Fetch and update duration from server
+function updateTaskDurationFromServer(taskId) {
+    const durationElement = document.getElementById('duration-' + taskId);
+    if (!durationElement) return;
+    
+    fetch(`{{ url_for('preventive.get_task_duration', task_exec_id=999999) }}`.replace('999999', taskId), {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.status === 'in_progress') {
+                const minutes = Math.floor(data.elapsed_seconds / 60);
+                const seconds = data.elapsed_seconds % 60;
+                durationElement.textContent = `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+            } else if (data.status === 'completed') {
+                durationElement.textContent = `${data.duration_minutes} min`;
+            }
+        }
+    })
+    .catch(e => console.error('Error fetching duration:', e));
 }
 
 // End Task
 let currentTaskIdForEnd = null;
 
 function attachEventListeners() {
+    attachStartTaskListeners();
+    
     document.querySelectorAll('.end-task').forEach(btn => {
         btn.removeEventListener('click', handleEndTask);
         btn.addEventListener('click', handleEndTask);
@@ -544,6 +666,15 @@ function attachEventListeners() {
 
 function handleEndTask(e) {
     const taskId = this.dataset.taskId;
+    endTask(e, taskId);
+}
+
+function endTask(event, taskId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     currentTaskIdForEnd = taskId;
     
     // Update modal
@@ -555,15 +686,38 @@ function handleEndTask(e) {
     document.getElementById('timeElapsed').textContent = timeElapsed;
     
     $('#endTaskModal').modal('show');
+    
+    return false;
+}
+
+function skipTask(event, taskId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    currentTaskIdForEnd = taskId;
+    $('#skipTaskModal').modal('show');
+    
+    return false;
 }
 
 function handleSkipTask(e) {
-    currentTaskIdForEnd = this.dataset.taskId;
-    $('#skipTaskModal').modal('show');
+    const taskId = this.dataset.taskId;
+    skipTask(e, taskId);
 }
 
 function handleViewTask(e) {
     const taskId = this.dataset.taskId;
+    viewTask(e, taskId);
+}
+
+function viewTask(event, taskId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     const taskRow = document.getElementById('task-' + taskId);
     const cells = taskRow.querySelectorAll('td');
     
@@ -582,6 +736,8 @@ function handleViewTask(e) {
     
     document.getElementById('taskModalBody').innerHTML = html;
     $('#taskModal').modal('show');
+    
+    return false;
 }
 
 // Confirm End Task
@@ -683,15 +839,88 @@ document.getElementById('confirmSkipTask').addEventListener('click', () => {
 });
 
 // Issues checkbox toggle
-document.getElementById('issues_found').addEventListener('change', function() {
-    const group = document.getElementById('issues_description_group');
-    group.style.display = this.checked ? 'block' : 'none';
-});
+const issuesCheckbox = document.getElementById('issues_found');
+if (issuesCheckbox) {
+    issuesCheckbox.addEventListener('change', function() {
+        const group = document.getElementById('issues_description_group');
+        if (group) {
+            group.style.display = this.checked ? 'block' : 'none';
+        }
+    });
+}
 
-// Attach event listeners on load
+// CRITICAL: Prevent completion form from submitting unless user explicitly clicks submit button
 document.addEventListener('DOMContentLoaded', function() {
+    const completionForm = document.getElementById('completion-form');
+    if (completionForm) {
+        console.log('✓ Completion form found - adding safeguards');
+        
+        // Prevent form submit event
+        completionForm.addEventListener('submit', function(e) {
+            console.log('⚠️ Form submit event triggered!');
+            console.log('Submitter:', e.submitter);
+            
+            // Check if user actually clicked the submit button
+            const confirmButton = this.querySelector('button[type="submit"]');
+            if (e.submitter !== confirmButton) {
+                console.log('❌ BLOCKING: Form submitted without clicking submit button');
+                console.log('Submitter:', e.submitter);
+                console.log('Expected:', confirmButton);
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            console.log('✓ Form submission allowed - submit button was clicked');
+        });
+        
+        // Prevent Enter key from submitting
+        completionForm.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                console.log('⚠️Enter key pressed on', e.target.type);
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // Disable all form field change events that might trigger submission
+        const formInputs = completionForm.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                console.log('Field changed:', this.name, '- not submitting');
+            });
+        });
+        
+        console.log('✓ Form safeguards installed');
+    } else {
+        console.warn('⚠️ Completion form not found');
+    }
+    
+    // ORIGINAL TABLE AND EVENT LISTENERS
+    console.log('DOM Content Loaded');
+    
+    // Add safeguard to prevent table row navigation
+    const taskTable = document.querySelector('.table tbody');
+    if (taskTable) {
+        taskTable.addEventListener('click', function(e) {
+            // Only allow clicks on buttons
+            if (!e.target.closest('button')) {
+                console.log('Non-button click detected on table, allowing default behavior');
+            }
+        });
+        console.log('Table safeguard activated');
+    }
+    
+    attachStartTaskListeners();
     attachEventListeners();
     updateCompletedCount();
+    
+    const refreshButton = document.getElementById('refreshButton');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshAllTaskDurations);
+    }
+    
+    console.log('All listeners attached');
 });
 
 // Update completed task count
@@ -709,6 +938,41 @@ function updateCompletedCount() {
     });
     document.getElementById('completedCount').textContent = count + ' Completed';
 }
+
+// Refresh all task durations from server
+function refreshAllTaskDurations() {
+    const taskRows = document.querySelectorAll('tbody tr[data-task-id]');
+    const button = document.getElementById('refreshButton');
+    
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+    }
+    
+    let refreshCount = 0;
+    taskRows.forEach(row => {
+        const taskId = row.getAttribute('data-task-id');
+        updateTaskDurationFromServer(taskId);
+        refreshCount++;
+    });
+    
+    // Re-enable button after a short delay
+    setTimeout(() => {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        }
+    }, 500);
+}
+
+// Debugging helper
+console.log('%c=== PREVENTIVE MAINTENANCE PAGE LOADED ===', 'font-size: 14px; font-weight: bold; color: #007bff;');
+console.log('%cIf the page redirects after clicking Start, the following info will help debug:', 'font-size: 12px; color: #6c757d;');
+console.log('%c1. Open DevTools Console (F12) before clicking Start', 'font-size: 11px;');
+console.log('%c2. Click the Start button and watch the console logs', 'font-size: 11px;');
+console.log('%c3. Check the Network tab to see what API calls are being made', 'font-size: 11px;');
+console.log('%c4. Share the console logs and Network tab details', 'font-size: 11px; color: #dc3545;');
+
 </script>
 
 <style>

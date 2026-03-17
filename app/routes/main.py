@@ -318,7 +318,6 @@ def maintenance_report_card():
                     checklist[task_key]['end_time'] = datetime.utcnow().isoformat()
                     checklist[task_key]['duration'] = duration
                 
-                import json
                 report.checklist_data = json.dumps(checklist)
                 report.updated_at = datetime.utcnow()
                 db.session.commit()

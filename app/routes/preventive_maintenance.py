@@ -388,6 +388,48 @@ def skip_task(task_exec_id):
     
     return jsonify({'success': True, 'message': 'Task skipped'})
 
+@preventive_bp.route('/task-execution/<int:task_exec_id>/duration', methods=['GET'])
+@login_required
+def get_task_duration(task_exec_id):
+    """Get current elapsed duration for a running task (server-side calculation)"""
+    task_exec = PreventiveMaintenanceTaskExecution.query.get_or_404(task_exec_id)
+    execution = task_exec.execution
+    user = User.query.get(session['user_id'])
+    
+    # Verify authorization
+    if execution.assigned_technician_id != user.id and user.role not in ['admin', 'supervisor']:
+        return jsonify({'success': False, 'error': 'Not authorized'}), 403
+    
+    if task_exec.status == 'completed':
+        # Return the recorded duration
+        return jsonify({
+            'success': True,
+            'status': 'completed',
+            'duration_minutes': task_exec.actual_duration_minutes or task_exec.duration_minutes or 0,
+            'elapsed_seconds': int((task_exec.end_time - task_exec.start_time).total_seconds()) if task_exec.start_time and task_exec.end_time else 0
+        })
+    elif task_exec.status == 'in_progress' and task_exec.start_time:
+        # Calculate elapsed time from start to now
+        elapsed = datetime.utcnow() - task_exec.start_time
+        elapsed_seconds = int(elapsed.total_seconds())
+        elapsed_minutes = elapsed_seconds // 60
+        
+        return jsonify({
+            'success': True,
+            'status': 'in_progress',
+            'elapsed_seconds': elapsed_seconds,
+            'elapsed_minutes': elapsed_minutes,
+            'start_time': task_exec.start_time.isoformat()
+        })
+    else:
+        # Task hasn't started
+        return jsonify({
+            'success': True,
+            'status': task_exec.status,
+            'elapsed_seconds': 0,
+            'elapsed_minutes': 0
+        })
+
 # ============================================
 # EXECUTION COMPLETION
 # ============================================

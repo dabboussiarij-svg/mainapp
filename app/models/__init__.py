@@ -232,7 +232,7 @@ class MaintenanceReport(db.Model):
     __tablename__ = 'maintenance_reports'
     
     id = db.Column(db.Integer, primary_key=True)
-    schedule_id = db.Column(db.Integer, db.ForeignKey('maintenance_schedules.id', ondelete='CASCADE'), nullable=False)
+    schedule_id = db.Column(db.Integer, db.ForeignKey('maintenance_schedules.id', ondelete='CASCADE'), nullable=True)  # nullable for ad-hoc reports
     technician_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     machine_name = db.Column(db.String(200))  # Cached machine name for easier access
     actual_start_time = db.Column(db.DateTime)
