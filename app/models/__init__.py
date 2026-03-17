@@ -184,10 +184,14 @@ class Machine(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     machine_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    machine_name = db.Column(db.String(200), nullable=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     location = db.Column(db.String(200))
     department = db.Column(db.String(100), index=True)
+    zone = db.Column(db.String(100), nullable=True, index=True)
+    zone_id = db.Column(db.Integer, db.ForeignKey('zones.id'), nullable=True)
+    ip_address = db.Column(db.String(50), unique=True, nullable=True, index=True)
     model = db.Column(db.String(100))
     manufacturer = db.Column(db.String(100))
     purchase_date = db.Column(db.Date)
@@ -604,3 +608,84 @@ class PreventiveMaintenanceTaskExecution(db.Model):
             duration = self.end_time - self.start_time
             return int(duration.total_seconds() / 60)
         return None
+
+
+class MachineStatus(db.Model):
+    """Tracks the current real-time status of each machine from Raspberry Pi"""
+    __tablename__ = 'machine_status'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id', ondelete='CASCADE'), nullable=False, unique=True, index=True)
+    machine_name = db.Column(db.String(200))  # Cache of machine name for quick access
+    current_status = db.Column(db.String(50), default='working')  # working, downtime, maintenance, break, offline
+    status_since = db.Column(db.DateTime, default=datetime.utcnow)  # When current status started
+    last_event_type = db.Column(db.String(50))  # Type of last event
+    last_user_start = db.Column(db.String(100))  # User ID who started current event
+    last_user_end = db.Column(db.String(100))  # User ID who ended last event
+    last_comment = db.Column(db.Text)  # Last comment or note
+    power_status = db.Column(db.String(20), default='on')  # on or off
+    
+    # Timing
+    cumulative_downtime_today = db.Column(db.Float, default=0)  # Total downtime hours today
+    current_downtime_duration = db.Column(db.Float, default=0)  # Current downtime duration in seconds
+    
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    machine = db.relationship('Machine', backref='status_tracker', foreign_keys=[machine_id])
+    
+    def __repr__(self):
+        return f'<MachineStatus {self.machine_name}: {self.current_status}>'
+
+
+class MachineEvent(db.Model):
+    """Tracks all events from the Raspberry Pi (downtime, maintenance, break, etc.)"""
+    __tablename__ = 'machine_events'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id', ondelete='CASCADE'), nullable=False, index=True)
+    machine_name = db.Column(db.String(200))  # Cache for quick access
+    event_type = db.Column(db.String(50), nullable=False)  # downtime, maintenance, break, breakdown, power_cut
+    event_status = db.Column(db.String(50), default='started')  # started, ended, cancelled
+    
+    # User tracking
+    start_user_id = db.Column(db.String(100))  # User ID who triggered event
+    end_user_id = db.Column(db.String(100))  # User ID who ended event
+    
+    # Event details
+    start_comment = db.Column(db.Text)  # Comment when event started
+    end_comment = db.Column(db.Text)  # Comment when event ended
+    cancel_reason = db.Column(db.Text)  # Reason if event was cancelled
+    breakdown_type = db.Column(db.String(100))  # For maintenance: Curative/Corrective/Preventive
+    
+    # Timing
+    event_start_time = db.Column(db.DateTime, nullable=False)
+    event_end_time = db.Column(db.DateTime)
+    duration_seconds = db.Column(db.Float)  # Total duration in seconds
+    reaction_time_seconds = db.Column(db.Float)  # For breakdown: time until maintenance arrived
+    maintenance_arrival_time = db.Column(db.DateTime)  # When maintenance team arrived
+    maintenance_arrival_user_id = db.Column(db.String(100))  # Who arrived
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    machine = db.relationship('Machine', backref='events', foreign_keys=[machine_id])
+    
+    def __repr__(self):
+        return f'<MachineEvent {self.machine_name}: {self.event_type} at {self.event_start_time}>'
+    
+    @property
+    def duration_hours(self):
+        """Get duration in hours"""
+        if self.duration_seconds:
+            return self.duration_seconds / 3600
+        return 0
+    
+    @property
+    def reaction_time_minutes(self):
+        """Get reaction time in minutes"""
+        if self.reaction_time_seconds:
+            return self.reaction_time_seconds / 60
+        return 0

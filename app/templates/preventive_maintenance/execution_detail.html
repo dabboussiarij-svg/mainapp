@@ -340,10 +340,16 @@
             <a href="{{ url_for('preventive.executions') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Executions
             </a>
+            <a href="{{ url_for('preventive.report_form', execution_id=execution.id) }}" class="btn btn-primary">
+                <i class="fas fa-file-alt"></i> Maintenance Report Form
+            </a>
+            <a href="{{ url_for('preventive.export_pdf', execution_id=execution.id) }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf"></i> Export as PDF
+            </a>
             <a href="{{ url_for('preventive.print_execution', execution_id=execution.id) }}" class="btn btn-info">
                 <i class="fas fa-print"></i> Print Report
             </a>
-            <a href="{{ url_for('preventive.export_json', execution_id=execution.id) }}" class="btn btn-primary">
+            <a href="{{ url_for('preventive.export_json', execution_id=execution.id) }}" class="btn btn-warning">
                 <i class="fas fa-download"></i> Export JSON
             </a>
         </div>
@@ -465,7 +471,7 @@ let taskTimers = {};
 document.querySelectorAll('.start-task').forEach(btn => {
     btn.addEventListener('click', function() {
         const taskId = this.dataset.taskId;
-        fetch(`{{ url_for('preventive.start_task', task_exec_id='TASK_ID') }}`.replace('TASK_ID', taskId), {
+        fetch(`{{ url_for('preventive.start_task', task_exec_id=999999) }}`.replace('999999', taskId), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -590,7 +596,7 @@ document.getElementById('confirmEndTask').addEventListener('click', () => {
         quality_check: document.getElementById('endTaskQuality').value
     };
     
-    fetch(`{{ url_for('preventive.end_task', task_exec_id='TASK_ID') }}`.replace('TASK_ID', taskId), {
+    fetch(`{{ url_for('preventive.end_task', task_exec_id=999999) }}`.replace('999999', taskId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -645,7 +651,7 @@ document.getElementById('confirmSkipTask').addEventListener('click', () => {
     const taskId = currentTaskIdForEnd;
     const reason = document.getElementById('skipTaskReason').value;
     
-    fetch(`{{ url_for('preventive.skip_task', task_exec_id='TASK_ID') }}`.replace('TASK_ID', taskId), {
+    fetch(`{{ url_for('preventive.skip_task', task_exec_id=999999) }}`.replace('999999', taskId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from app.models import db, Material, Machine, MaintenanceSchedule, SparePartsDemand, StockAlert, User, MaterialReturn, Zone, MaintenanceReport, StockMovement
+from app.models import db, Material, Machine, MaintenanceSchedule, SparePartsDemand, StockAlert, User, MaterialReturn, Zone, MaintenanceReport, StockMovement, PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, MachineStatus
 from app.routes.auth import login_required, role_required
 from datetime import datetime, timedelta
 
@@ -33,10 +33,10 @@ def dashboard():
             'color': '#3b82f6'
         },
         'maintenance': {
-            'title': 'Maintenance Schedules',
+            'title': 'Preventive Maintenance Plan',
             'icon': 'tools',
-            'description': 'Schedule and track maintenance',
-            'url': 'maintenance.schedules',
+            'description': 'View maintenance calendar for all machines and zones',
+            'url': 'preventive.calendar_view',
             'roles': ['admin', 'supervisor', 'technician'],
             'color': '#10b981'
         },
@@ -88,6 +88,22 @@ def dashboard():
             'url': 'main.stock_kpis',
             'roles': ['admin', 'supervisor', 'stock_agent'],
             'color': '#f97316'
+        },
+        'machine_status': {
+            'title': 'Machine Status Monitor',
+            'icon': 'heartbeat',
+            'description': 'Real-time machine status and events',
+            'url': 'main.machine_status_view',
+            'roles': ['admin', 'supervisor', 'technician'],
+            'color': '#06b6d4'
+        },
+        'preventive_reports': {
+            'title': 'Preventive Maintenance Reports',
+            'icon': 'clipboard-list',
+            'description': 'View preventive maintenance execution reports',
+            'url': 'main.preventive_reports_view',
+            'roles': ['admin', 'supervisor', 'technician'],
+            'color': '#14b8a6'
         }
     }
     
@@ -143,13 +159,24 @@ def dashboard():
         MaintenanceSchedule.created_at.desc()
     ).limit(5).all()
     
+    # Preventive maintenance executions
+    pending_executions = PreventiveMaintenanceExecution.query.filter_by(
+        status='pending'
+    ).count()
+    
+    in_progress_executions = PreventiveMaintenanceExecution.query.filter_by(
+        status='in_progress'
+    ).count()
+    
     stats = {
         'total_machines': total_machines,
         'upcoming_maintenance': upcoming_maintenance,
         'overdue_maintenance': overdue_maintenance,
         'pending_demands': pending_demands,
         'stock_alerts': stock_alerts,
-        'critical_materials': critical_materials
+        'critical_materials': critical_materials,
+        'pending_executions': pending_executions,
+        'in_progress_executions': in_progress_executions
     }
     
     return render_template(
@@ -232,6 +259,113 @@ def maintenance_kpis():
     }
 
     return render_template('main/maintenance_kpis.html', **context)
+
+
+@main_bp.route('/maintenance-report')
+@login_required
+@role_required('admin', 'supervisor', 'technician')
+def maintenance_report_card():
+    """Display the maintenance report card for the dashboard"""
+    user = User.query.get(session['user_id'])
+    machines = Machine.query.filter_by(status='active').all()
+    
+    # Get execution ID from request if provided
+    execution_id = request.args.get('execution_id', type=int)
+    execution = None
+    task_executions = []
+    
+    if execution_id:
+        execution = PreventiveMaintenanceExecution.query.get_or_404(execution_id)
+        # Check authorization
+        if execution.assigned_technician_id != user.id and user.role not in ['admin', 'supervisor']:
+            flash('You are not authorized to view this execution.', 'danger')
+            return redirect(url_for('main.maintenance_report_card'))
+        
+        task_executions = PreventiveMaintenanceTaskExecution.query.filter_by(
+            execution_id=execution_id
+        ).order_by(PreventiveMaintenanceTaskExecution.order_number).all()
+    
+    return render_template(
+        'maintenance_report_card.html',
+        execution=execution,
+        task_executions=task_executions,
+        machines=machines,
+        current_user=user
+    )
+
+
+@main_bp.route('/machine-status')
+@login_required
+@role_required('admin', 'supervisor', 'technician')
+def machine_status_view():
+    """Display machine status monitoring card view"""
+    user = User.query.get(session['user_id'])
+    machines = Machine.query.filter_by(status='active').all()
+    
+    # Get current status for all machines
+    machine_statuses = {}
+    for machine in machines:
+        status = MachineStatus.query.filter_by(machine_id=machine.id).first()
+        if status:
+            machine_statuses[machine.id] = {
+                'current_status': status.current_status,
+                'status_since': status.status_since,
+                'downtime_today': status.cumulative_downtime_today
+            }
+    
+    return render_template(
+        'machine_status_card_view.html',
+        machines=machines,
+        machine_statuses=machine_statuses,
+        current_user=user
+    )
+
+
+@main_bp.route('/event-details/<int:event_id>')
+@login_required
+@role_required('admin', 'supervisor', 'technician')
+def event_details(event_id):
+    """Display detailed information about a specific event"""
+    from app.models import MachineEvent
+    
+    event = MachineEvent.query.get_or_404(event_id)
+    machine = Machine.query.get(event.machine_id)
+    
+    # Calculate additional metrics
+    is_active = event.event_status == 'started'
+    
+    return render_template(
+        'event_details.html',
+        event=event,
+        machine=machine,
+        is_active=is_active
+    )
+
+
+@main_bp.route('/preventive-reports')
+@login_required
+@role_required('admin', 'supervisor', 'technician')
+def preventive_reports_view():
+    """Display preventive maintenance reports card view"""
+    user = User.query.get(session['user_id'])
+    
+    # Get all preventive maintenance executions
+    executions = PreventiveMaintenanceExecution.query.order_by(
+        PreventiveMaintenanceExecution.created_at.desc()
+    ).all()
+    
+    # Filter based on user role
+    if user.role == 'technician':
+        executions = [
+            e for e in executions 
+            if e.assigned_technician_id == user.id
+        ]
+    
+    return render_template(
+        'preventive_reports_card_view.html',
+        executions=executions,
+        current_user=user
+    )
 
 
 @main_bp.route('/stock-kpis')

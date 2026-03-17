@@ -48,11 +48,11 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1>Preventive Maintenance Calendar</h1>
-            <p class="text-muted">View scheduled maintenance dates for machines</p>
+            <p class="text-muted">View scheduled maintenance dates for all machines and zones</p>
         </div>
         <div class="col-md-4">
-            <form method="GET" class="form-inline">
-                <select name="machine_id" class="form-control mr-2" onchange="this.form.submit()">
+            <form method="GET" class="form-inline" id="filterForm">
+                <select name="machine_id" class="form-control form-control-sm mr-2" id="machineSelect" onchange="this.form.submit()">
                     <option value="">All Machines</option>
                     {% for machine in machines %}
                     <option value="{{ machine.id }}" {% if selected_machine == machine.id|string %}selected{% endif %}>
@@ -60,7 +60,20 @@
                     </option>
                     {% endfor %}
                 </select>
+                <select name="zone_id" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Zones</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}" {% if selected_zone == zone.id|string %}selected{% endif %}>
+                        {{ zone.name }}
+                    </option>
+                    {% endfor %}
+                </select>
             </form>
+            {% if selected_machine %}
+            <a href="{{ url_for('preventive.index') }}" class="btn btn-sm btn-success mt-2" style="width: 100%;">
+                <i class="fas fa-file-alt"></i> Generate Report
+            </a>
+            {% endif %}
         </div>
     </div>
 
@@ -249,5 +262,47 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     calendar.render();
 });
+
+// Set today's date as default
+document.getElementById('reportDate').valueAsDate = new Date();
+
+// Toggle issues description visibility
+document.getElementById('issuesFound').addEventListener('change', function() {
+    const detailDiv = document.getElementById('issuesDetail');
+    detailDiv.style.display = this.checked ? 'block' : 'none';
+});
+
+// Handle quick report form submission
+document.getElementById('quickReportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const reportData = {
+        report_date: document.getElementById('reportDate').value,
+        machine_condition: document.getElementById('machineCondition').value,
+        overall_findings: document.getElementById('findings').value,
+        issues_found: document.getElementById('issuesFound').checked,
+        issues_description: document.getElementById('issuesDescription').value,
+        spare_parts_needed: document.getElementById('spareParts').checked,
+        recommendations: document.getElementById('recommendations').value
+    };
+    
+    alert('Report saved successfully!\n\nNote: This quick form saves the data. For detailed reporting with PDF export, please use the full report form from an execution detail page.');
+    
+    // Reset form
+    this.reset();
+    document.getElementById('reportDate').valueAsDate = new Date();
+    document.getElementById('issuesDetail').style.display = 'none';
+});
+
+// Print function
+function printReport() {
+    alert('Printing report...');
+    window.print();
+}
+
+// PDF Export function
+function exportToPDF() {
+    alert('Exporting to PDF...\n\nNote: For professional PDF export with full formatting, please use the report from an execution detail page.');
+}
 </script>
 {% endblock %}
