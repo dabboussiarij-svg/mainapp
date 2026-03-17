@@ -954,5 +954,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logger.info("System shutdown via keyboard interrupt")
+        logger.info("System shutdow1n via keyboard interrupt")
         print("\nShutting down...")

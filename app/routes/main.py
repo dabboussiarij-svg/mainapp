@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.models import db, Material, Machine, MaintenanceSchedule, SparePartsDemand, StockAlert, User, MaterialReturn, Zone, MaintenanceReport, StockMovement, PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, MachineStatus
 from app.routes.auth import login_required, role_required
 from datetime import datetime, timedelta
+import json
 
 main_bp = Blueprint('main', __name__)
 
@@ -261,36 +262,137 @@ def maintenance_kpis():
     return render_template('main/maintenance_kpis.html', **context)
 
 
-@main_bp.route('/maintenance-report')
+@main_bp.route('/maintenance-report', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'supervisor', 'technician')
 def maintenance_report_card():
-    """Display the maintenance report card for the dashboard"""
+    """Display and handle the maintenance report card"""
     user = User.query.get(session['user_id'])
+    
+    # Handle AJAX auto-save of task data
+    if request.method == 'POST' and request.is_json:
+        try:
+            data = request.get_json()
+            task_num = data.get('task_num')
+            report_id = data.get('report_id')
+            action = data.get('action')  # 'start' or 'stop'
+            duration = data.get('duration', 0)
+            status = data.get('status')
+            remarks = data.get('remarks')
+            
+            # Get or create maintenance report
+            if report_id:
+                report = MaintenanceReport.query.get(report_id)
+            else:
+                report = MaintenanceReport()
+                report.technician_id = user.id
+                report.machine_name = data.get('machine_name', 'Unknown')
+                report.report_status = 'draft'
+                report.created_at = datetime.utcnow()
+                db.session.add(report)
+                db.session.flush()
+                report_id = report.id
+            
+            # Update task execution data
+            if report_id and task_num:
+                # Store task data in JSON format in checklist_data
+                if not report.checklist_data:
+                    checklist = {}
+                else:
+                    try:
+                        import json
+                        checklist = json.loads(report.checklist_data)
+                    except:
+                        checklist = {}
+                
+                task_key = f'task_{task_num}'
+                if task_key not in checklist:
+                    checklist[task_key] = {}
+                
+                checklist[task_key]['status'] = status or '-'
+                checklist[task_key]['duration'] = duration
+                checklist[task_key]['remarks'] = remarks or ''
+                if action == 'start':
+                    checklist[task_key]['start_time'] = datetime.utcnow().isoformat()
+                elif action == 'stop':
+                    checklist[task_key]['end_time'] = datetime.utcnow().isoformat()
+                    checklist[task_key]['duration'] = duration
+                
+                import json
+                report.checklist_data = json.dumps(checklist)
+                report.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                return {'success': True, 'report_id': report_id, 'message': f'Task {task_num} saved'}
+            
+            return {'success': False, 'message': 'Invalid task data'}
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error saving task data: {str(e)}')
+            return {'success': False, 'message': str(e)}, 400
+    
+    # Handle final form submission
+    if request.method == 'POST' and not request.is_json:
+        try:
+            report_id = request.form.get('report_id')
+            
+            # Get existing report or create new
+            if report_id:
+                try:
+                    report = MaintenanceReport.query.get(int(report_id))
+                except:
+                    report = None
+            else:
+                report = None
+            
+            if not report:
+                report = MaintenanceReport()
+                report.technician_id = user.id
+                report.report_status = 'draft'
+                report.created_at = datetime.utcnow()
+            
+            # Update report with form data
+            machine_id = request.form.get('machine_id')
+            if machine_id:
+                machine = Machine.query.get(int(machine_id))
+                if machine:
+                    report.machine_name = machine.name
+            
+            report.work_description = request.form.get('equipment', '')
+            report.technician_zone = request.form.get('serial_number', '')
+            report.environmental_conditions = request.form.get('inventory_number', '')
+            report.safety_observations = request.form.get('technician_observations', '')
+            report.report_status = 'submitted'
+            report.actual_end_time = datetime.utcnow()
+            report.updated_at = datetime.utcnow()
+            
+            db.session.add(report)
+            db.session.commit()
+            
+            flash('Rapport de maintenance enregistré et archivé avec succès!', 'success')
+            return redirect(url_for('main.dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error submitting maintenance report: {str(e)}')
+            flash(f'Erreur lors de la soumission: {str(e)}', 'danger')
+            return redirect(url_for('main.maintenance_report_card'))
+    
+    # Handle GET request (display form)
     machines = Machine.query.filter_by(status='active').all()
     
-    # Get execution ID from request if provided
-    execution_id = request.args.get('execution_id', type=int)
-    execution = None
-    task_executions = []
-    
-    if execution_id:
-        execution = PreventiveMaintenanceExecution.query.get_or_404(execution_id)
-        # Check authorization
-        if execution.assigned_technician_id != user.id and user.role not in ['admin', 'supervisor']:
-            flash('You are not authorized to view this execution.', 'danger')
-            return redirect(url_for('main.maintenance_report_card'))
-        
-        task_executions = PreventiveMaintenanceTaskExecution.query.filter_by(
-            execution_id=execution_id
-        ).order_by(PreventiveMaintenanceTaskExecution.order_number).all()
+    # Check if there's a draft report to resume
+    draft_report = MaintenanceReport.query.filter_by(
+        technician_id=user.id,
+        report_status='draft'
+    ).order_by(MaintenanceReport.created_at.desc()).first()
     
     return render_template(
         'maintenance_report_card.html',
-        execution=execution,
-        task_executions=task_executions,
         machines=machines,
-        current_user=user
+        current_user=user,
+        draft_report=draft_report
     )
 
 
