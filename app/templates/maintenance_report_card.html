@@ -397,6 +397,7 @@
                                             <button type="button" class="timer-button timer-start" id="start_task_1" onclick="startTimer(1); return false;">Start</button>
                                             <button type="button" class="timer-button timer-stop" id="stop_task_1" onclick="stopTimer(1); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_1" title="Click to edit duration" onclick="editDuration(1)">0m</div>
+                                 
                                             <input type="hidden" id="time_task_1" name="task_1_time" value="0">
                                         </div>
                                     </td>
@@ -968,7 +969,6 @@
 </div>
 
 <script>
-<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Check if execution exists before allowing form submission
     const executionIdHidden = document.querySelector('input[name="execution_id"]');
@@ -1126,9 +1126,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Calculate elapsed time in minutes (rounded down)
+        // Calculate elapsed time in minutes and seconds
         const elapsed = Date.now() - timerState[taskId];
-        const minutes = Math.floor(elapsed / 60000);
+        const totalSeconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
 
         // Clear interval
         if (displayIntervals[taskId]) {
@@ -1136,16 +1138,19 @@ document.addEventListener('DOMContentLoaded', function() {
             delete displayIntervals[taskId];
         }
 
-        // Update display with final time
-        display.textContent = `${minutes}m`;
+        // Update display with final time (show minutes and seconds)
+        if (minutes > 0) {
+            display.textContent = `${minutes}m ${seconds}s`;
+            timeInput.value = minutes; // Store as minutes for form submission
+        } else {
+            display.textContent = `${seconds}s`;
+            timeInput.value = 0; // Less than 1 minute
+        }
         display.classList.remove('running');
 
-        // Store time in hidden input
-        timeInput.value = minutes;
-
-        // Update button states
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+        // Hide both buttons after stopping
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'none';
 
         // Clear timer state
         delete timerState[taskId];
@@ -1156,60 +1161,16 @@ document.addEventListener('DOMContentLoaded', function() {
         autoSaveTaskData(taskId, 'stop', minutes, status, remarks);
     };
 
-    // Auto-save task data via AJAX
+    // Auto-save task data via AJAX (simplified - just store locally)
     function autoSaveTaskData(taskId, action, duration, status = '-', remarks = '') {
-        const reportId = document.getElementById('reportId').value;
-        const machineSelect = document.getElementById('machineSelect');
-        const machineOption = machineSelect?.options[machineSelect.selectedIndex];
-        const machineName = machineOption?.text || 'Unknown';
-        const saveIndicator = document.getElementById('saveIndicator');
-
-        const data = {
-            task_num: taskId,
-            report_id: reportId || null,
-            action: action,
-            duration: duration,
-            status: status,
-            remarks: remarks,
-            machine_name: machineName
-        };
-
-        // Show save indicator
-        if (saveIndicator) {
-            saveIndicator.style.display = 'inline';
+        // Store time in hidden input - will be submitted with form
+        const timeInput = document.getElementById(`time_task_${taskId}`);
+        if (timeInput) {
+            timeInput.value = duration;
         }
-
-        fetch('{{ url_for("main.maintenance_report_card") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success && !reportId) {
-                // Store the newly created report ID
-                document.getElementById('reportId').value = result.report_id;
-                console.log(`Rapport créé: ${result.report_id}`);
-            }
-            if (result.success) {
-                console.log(`Tâche ${taskId} sauvegardée`);
-            }
-            // Hide save indicator
-            if (saveIndicator) {
-                setTimeout(() => {
-                    saveIndicator.style.display = 'none';
-                }, 500);
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors de la sauvegarde:', error);
-            // Hide save indicator even on error
-            if (saveIndicator) {
-                saveIndicator.style.display = 'none';
-            }
-        });
+        
+        // Data is now stored in form fields, will be submitted when user clicks "Enregistrer le rapport"
+        // No need to auto-save to server on every start/stop
     }
 
     window.editDuration = function(taskId) {
