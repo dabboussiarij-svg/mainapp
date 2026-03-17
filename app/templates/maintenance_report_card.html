@@ -394,8 +394,8 @@
                                     <td><select name="task_1_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_1" onclick="startTimer(1)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_1" onclick="stopTimer(1)" disabled>Stop</button>
+                                            <button type="button" class="timer-button timer-start" id="start_task_1" onclick="startTimer(1); return false;">Start</button>
+                                            <button type="button" class="timer-button timer-stop" id="stop_task_1" onclick="stopTimer(1); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_1" title="Click to edit duration" onclick="editDuration(1)">0m</div>
                                             <input type="hidden" id="time_task_1" name="task_1_time" value="0">
                                         </div>
@@ -409,8 +409,8 @@
                                     <td><select name="task_2_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_2" onclick="startTimer(2)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_2" onclick="stopTimer(2)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_2" type="button" onclick="startTimer(2); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_2" type="button" onclick="stopTimer(2); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_2" title="Click to edit duration" onclick="editDuration(2)">0m</div>
                                             <input type="hidden" id="time_task_2" name="task_2_time" value="0">
                                         </div>
@@ -424,8 +424,8 @@
                                     <td><select name="task_3_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_3" onclick="startTimer(3)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_3" onclick="stopTimer(3)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_3" type="button" onclick="startTimer(3); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_3" type="button" onclick="stopTimer(3); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_3" title="Click to edit duration" onclick="editDuration(3)">0m</div>
                                             <input type="hidden" id="time_task_3" name="task_3_time" value="0">
                                         </div>
@@ -439,8 +439,8 @@
                                     <td><select name="task_4_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_4" onclick="startTimer(4)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_4" onclick="stopTimer(4)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_4" type="button" onclick="startTimer(4); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_4" type="button" onclick="stopTimer(4); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_4" title="Click to edit duration" onclick="editDuration(4)">0m</div>
                                             <input type="hidden" id="time_task_4" name="task_4_time" value="0">
                                         </div>
@@ -454,8 +454,8 @@
                                     <td><select name="task_5_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_5" onclick="startTimer(5)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_5" onclick="stopTimer(5)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_5" type="button" onclick="startTimer(5); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_5" type="button" onclick="stopTimer(5); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_5" title="Click to edit duration" onclick="editDuration(5)">0m</div>
                                             <input type="hidden" id="time_task_5" name="task_5_time" value="0">
                                         </div>
@@ -469,8 +469,8 @@
                                     <td><select name="task_6_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_6" onclick="startTimer(6)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_6" onclick="stopTimer(6)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_6" type="button" onclick="startTimer(6); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_6" type="button" onclick="stopTimer(6); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_6" title="Click to edit duration" onclick="editDuration(6)">0m</div>
                                             <input type="hidden" id="time_task_6" name="task_6_time" value="0">
                                         </div>
@@ -484,8 +484,8 @@
                                     <td><select name="task_7_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_7" onclick="startTimer(7)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_7" onclick="stopTimer(7)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_7" type="button" onclick="startTimer(7); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_7" type="button" onclick="stopTimer(7); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_7" title="Click to edit duration" onclick="editDuration(7)">0m</div>
                                             <input type="hidden" id="time_task_7" name="task_7_time" value="0">
                                         </div>
@@ -499,8 +499,8 @@
                                     <td><select name="task_8_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_8" onclick="startTimer(8)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_8" onclick="stopTimer(8)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_8" type="button" onclick="startTimer(8); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_8" type="button" onclick="stopTimer(8); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_8" title="Click to edit duration" onclick="editDuration(8)">0m</div>
                                             <input type="hidden" id="time_task_8" name="task_8_time" value="0">
                                         </div>
@@ -514,8 +514,8 @@
                                     <td><select name="task_9_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_9" onclick="startTimer(9)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_9" onclick="stopTimer(9)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_9" type="button" onclick="startTimer(9); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_9" type="button" onclick="stopTimer(9); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_9" title="Click to edit duration" onclick="editDuration(9)">0m</div>
                                             <input type="hidden" id="time_task_9" name="task_9_time" value="0">
                                         </div>
@@ -529,8 +529,8 @@
                                     <td><select name="task_10_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_10" onclick="startTimer(10)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_10" onclick="stopTimer(10)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_10" type="button" onclick="startTimer(10); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_10" type="button" onclick="stopTimer(10); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_10" title="Click to edit duration" onclick="editDuration(10)">0m</div>
                                             <input type="hidden" id="time_task_10" name="task_10_time" value="0">
                                         </div>
@@ -544,8 +544,8 @@
                                     <td><select name="task_11_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_11" onclick="startTimer(11)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_11" onclick="stopTimer(11)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_11" type="button" onclick="startTimer(11); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_11" type="button" onclick="stopTimer(11); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_11" title="Click to edit duration" onclick="editDuration(11)">0m</div>
                                             <input type="hidden" id="time_task_11" name="task_11_time" value="0">
                                         </div>
@@ -559,8 +559,8 @@
                                     <td><select name="task_12_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_12" onclick="startTimer(12)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_12" onclick="stopTimer(12)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_12" type="button" onclick="startTimer(12); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_12" type="button" onclick="stopTimer(12); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_12" title="Click to edit duration" onclick="editDuration(12)">0m</div>
                                             <input type="hidden" id="time_task_12" name="task_12_time" value="0">
                                         </div>
@@ -574,8 +574,8 @@
                                     <td><select name="task_13_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_13" onclick="startTimer(13)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_13" onclick="stopTimer(13)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_13" type="button" onclick="startTimer(13); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_13" type="button" onclick="stopTimer(13); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_13" title="Click to edit duration" onclick="editDuration(13)">0m</div>
                                             <input type="hidden" id="time_task_13" name="task_13_time" value="0">
                                         </div>
@@ -589,8 +589,8 @@
                                     <td><select name="task_15_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_15" onclick="startTimer(15)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_15" onclick="stopTimer(15)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_15" type="button" onclick="startTimer(15); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_15" type="button" onclick="stopTimer(15); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_15" title="Click to edit duration" onclick="editDuration(15)">0m</div>
                                             <input type="hidden" id="time_task_15" name="task_15_time" value="0">
                                         </div>
@@ -604,8 +604,8 @@
                                     <td><select name="task_16_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_16" onclick="startTimer(16)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_16" onclick="stopTimer(16)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_16" type="button" onclick="startTimer(16); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_16" type="button" onclick="stopTimer(16); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_16" title="Click to edit duration" onclick="editDuration(16)">0m</div>
                                             <input type="hidden" id="time_task_16" name="task_16_time" value="0">
                                         </div>
@@ -619,8 +619,8 @@
                                     <td><select name="task_17_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_17" onclick="startTimer(17)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_17" onclick="stopTimer(17)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_17" type="button" onclick="startTimer(17); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_17" type="button" onclick="stopTimer(17); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_17" title="Click to edit duration" onclick="editDuration(17)">0m</div>
                                             <input type="hidden" id="time_task_17" name="task_17_time" value="0">
                                         </div>
@@ -634,8 +634,8 @@
                                     <td><select name="task_18_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_18" onclick="startTimer(18)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_18" onclick="stopTimer(18)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_18" type="button" onclick="startTimer(18); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_18" type="button" onclick="stopTimer(18); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_18" title="Click to edit duration" onclick="editDuration(18)">0m</div>
                                             <input type="hidden" id="time_task_18" name="task_18_time" value="0">
                                         </div>
@@ -649,8 +649,8 @@
                                     <td><select name="task_19_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_19" onclick="startTimer(19)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_19" onclick="stopTimer(19)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_19" type="button" onclick="startTimer(19); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_19" type="button" onclick="stopTimer(19); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_19" title="Click to edit duration" onclick="editDuration(19)">0m</div>
                                             <input type="hidden" id="time_task_19" name="task_19_time" value="0">
                                         </div>
@@ -664,8 +664,8 @@
                                     <td><select name="task_20_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_20" onclick="startTimer(20)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_20" onclick="stopTimer(20)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_20" type="button" onclick="startTimer(20); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_20" type="button" onclick="stopTimer(20); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_20" title="Click to edit duration" onclick="editDuration(20)">0m</div>
                                             <input type="hidden" id="time_task_20" name="task_20_time" value="0">
                                         </div>
@@ -678,11 +678,11 @@
                                     <td>Fixe</td>
                                     <td><select name="task_21_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
-                                        <div class=\"task-timer-container\">
-                                            <button class=\"timer-button timer-start\" id=\"start_task_21\" onclick=\"startTimer(21)\">Start</button>
-                                            <button class=\"timer-button timer-stop\" id=\"stop_task_21\" onclick=\"stopTimer(21)\" disabled>Stop</button>
-                                            <div class=\"timer-display\" id=\"display_task_21\" title=\"Click to edit duration\" onclick=\"editDuration(21)\">0m</div>
-                                            <input type=\"hidden\" id=\"time_task_21\" name=\"task_21_time\" value=\"0\">
+                                        <div class="task-timer-container">
+                                            <button class="timer-button timer-start" id="start_task_21" type="button" onclick="startTimer(21); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_21" type="button" onclick="stopTimer(21); return false;" disabled>Stop</button>
+                                            <div class="timer-display" id="display_task_21" title="Click to edit duration" onclick="editDuration(21)">0m</div>
+                                            <input type="hidden" id="time_task_21" name="task_21_time" value="0">
                                         </div>
                                     </td>
                                     <td><textarea name="task_21_remarks" class="form-control form-control-sm textaria-remarks"></textarea></td>
@@ -693,11 +693,11 @@
                                     <td>Tolérance ±4mm</td>
                                     <td><select name="task_22_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
-                                        <div class=\"task-timer-container\">
-                                            <button class=\"timer-button timer-start\" id=\"start_task_22\" onclick=\"startTimer(22)\">Start</button>
-                                            <button class=\"timer-button timer-stop\" id=\"stop_task_22\" onclick=\"stopTimer(22)\" disabled>Stop</button>
-                                            <div class=\"timer-display\" id=\"display_task_22\" title=\"Click to edit duration\" onclick=\"editDuration(22)\">0m</div>
-                                            <input type=\"hidden\" id=\"time_task_22\" name=\"task_22_time\" value=\"0\">
+                                        <div class="task-timer-container">
+                                            <button class="timer-button timer-start" id="start_task_22" type="button" onclick="startTimer(22); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_22" type="button" onclick="stopTimer(22); return false;" disabled>Stop</button>
+                                            <div class="timer-display" id="display_task_22" title="Click to edit duration" onclick="editDuration(22)">0m</div>
+                                            <input type="hidden" id="time_task_22" name="task_22_time" value="0">
                                         </div>
                                     </td>
                                     <td><textarea name="task_22_remarks" class="form-control form-control-sm textaria-remarks"></textarea></td>
@@ -708,11 +708,11 @@
                                     <td>Entre min et max</td>
                                     <td><select name="task_23_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
-                                        <div class=\"task-timer-container\">
-                                            <button class=\"timer-button timer-start\" id=\"start_task_23\" onclick=\"startTimer(23)\">Start</button>
-                                            <button class=\"timer-button timer-stop\" id=\"stop_task_23\" onclick=\"stopTimer(23)\" disabled>Stop</button>
-                                            <div class=\"timer-display\" id=\"display_task_23\" title=\"Click to edit duration\" onclick=\"editDuration(23)\">0m</div>
-                                            <input type=\"hidden\" id=\"time_task_23\" name=\"task_23_time\" value=\"0\">
+                                        <div class="task-timer-container">
+                                            <button class="timer-button timer-start" id="start_task_23" type="button" onclick="startTimer(23); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_23" type="button" onclick="stopTimer(23); return false;" disabled>Stop</button>
+                                            <div class="timer-display" id="display_task_23" title="Click to edit duration" onclick="editDuration(23)">0m</div>
+                                            <input type="hidden" id="time_task_23" name="task_23_time" value="0">
                                         </div>
                                     </td>
                                     <td><textarea name="task_23_remarks" class="form-control form-control-sm textaria-remarks"></textarea></td>
@@ -724,8 +724,8 @@
                                     <td><select name="task_24_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_24" onclick="startTimer(24)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_24" onclick="stopTimer(24)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_24" type="button" onclick="startTimer(24); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_24" type="button" onclick="stopTimer(24); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_24" title="Click to edit duration" onclick="editDuration(24)">0m</div>
                                             <input type="hidden" id="time_task_24" name="task_24_time" value="0">
                                         </div>
@@ -739,8 +739,8 @@
                                     <td><select name="task_25_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_25" onclick="startTimer(25)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_25" onclick="stopTimer(25)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_25" type="button" onclick="startTimer(25); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_25" type="button" onclick="stopTimer(25); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_25" title="Click to edit duration" onclick="editDuration(25)">0m</div>
                                             <input type="hidden" id="time_task_25" name="task_25_time" value="0">
                                         </div>
@@ -754,8 +754,8 @@
                                     <td><select name="task_26_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_26" onclick="startTimer(26)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_26" onclick="stopTimer(26)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_26" type="button" onclick="startTimer(26); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_26" type="button" onclick="stopTimer(26); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_26" title="Click to edit duration" onclick="editDuration(26)">0m</div>
                                             <input type="hidden" id="time_task_26" name="task_26_time" value="0">
                                         </div>
@@ -769,8 +769,8 @@
                                     <td><select name="task_27_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_27" onclick="startTimer(27)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_27" onclick="stopTimer(27)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_27" type="button" onclick="startTimer(27); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_27" type="button" onclick="stopTimer(27); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_27" title="Click to edit duration" onclick="editDuration(27)">0m</div>
                                             <input type="hidden" id="time_task_27" name="task_27_time" value="0">
                                         </div>
@@ -784,8 +784,8 @@
                                     <td><select name="task_28_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_28" onclick="startTimer(28)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_28" onclick="stopTimer(28)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_28" type="button" onclick="startTimer(28); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_28" type="button" onclick="stopTimer(28); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_28" title="Click to edit duration" onclick="editDuration(28)">0m</div>
                                             <input type="hidden" id="time_task_28" name="task_28_time" value="0">
                                         </div>
@@ -799,8 +799,8 @@
                                     <td><select name="task_29_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_29" onclick="startTimer(29)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_29" onclick="stopTimer(29)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_29" type="button" onclick="startTimer(29); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_29" type="button" onclick="stopTimer(29); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_29" title="Click to edit duration" onclick="editDuration(29)">0m</div>
                                             <input type="hidden" id="time_task_29" name="task_29_time" value="0">
                                         </div>
@@ -839,8 +839,8 @@
                                     <td><select name="task_30_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_30" onclick="startTimer(30)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_30" onclick="stopTimer(30)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_30" type="button" onclick="startTimer(30); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_30" type="button" onclick="stopTimer(30); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_30" title="Click to edit duration" onclick="editDuration(30)">0m</div>
                                             <input type="hidden" id="time_task_30" name="task_30_time" value="0">
                                         </div>
@@ -854,8 +854,8 @@
                                     <td><select name="task_31_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_31" onclick="startTimer(31)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_31" onclick="stopTimer(31)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_31" type="button" onclick="startTimer(31); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_31" type="button" onclick="stopTimer(31); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_31" title="Click to edit duration" onclick="editDuration(31)">0m</div>
                                             <input type="hidden" id="time_task_31" name="task_31_time" value="0">
                                         </div>
@@ -869,8 +869,8 @@
                                     <td><select name="task_32_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_32" onclick="startTimer(32)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_32" onclick="stopTimer(32)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_32" type="button" onclick="startTimer(32); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_32" type="button" onclick="stopTimer(32); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_32" title="Click to edit duration" onclick="editDuration(32)">0m</div>
                                             <input type="hidden" id="time_task_32" name="task_32_time" value="0">
                                         </div>
@@ -884,8 +884,8 @@
                                     <td><select name="task_33_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_33" onclick="startTimer(33)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_33" onclick="stopTimer(33)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_33" type="button" onclick="startTimer(33); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_33" type="button" onclick="stopTimer(33); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_33" title="Click to edit duration" onclick="editDuration(33)">0m</div>
                                             <input type="hidden" id="time_task_33" name="task_33_time" value="0">
                                         </div>
@@ -899,8 +899,8 @@
                                     <td><select name="task_34_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_34" onclick="startTimer(34)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_34" onclick="stopTimer(34)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_34" type="button" onclick="startTimer(34); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_34" type="button" onclick="stopTimer(34); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_34" title="Click to edit duration" onclick="editDuration(34)">0m</div>
                                             <input type="hidden" id="time_task_34" name="task_34_time" value="0">
                                         </div>
@@ -914,8 +914,8 @@
                                     <td><select name="task_35_status" class="form-select form-select-sm"><option value="-">-</option><option value="OK">OK</option><option value="NOK">NOK</option></select></td>
                                     <td>
                                         <div class="task-timer-container">
-                                            <button class="timer-button timer-start" id="start_task_35" onclick="startTimer(35)">Start</button>
-                                            <button class="timer-button timer-stop" id="stop_task_35" onclick="stopTimer(35)" disabled>Stop</button>
+                                            <button class="timer-button timer-start" id="start_task_35" type="button" onclick="startTimer(35); return false;">Start</button>
+                                            <button class="timer-button timer-stop" id="stop_task_35" type="button" onclick="stopTimer(35); return false;" disabled>Stop</button>
                                             <div class="timer-display" id="display_task_35" title="Click to edit duration" onclick="editDuration(35)">0m</div>
                                             <input type="hidden" id="time_task_35" name="task_35_time" value="0">
                                         </div>
