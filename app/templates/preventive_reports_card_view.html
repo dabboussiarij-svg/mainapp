@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Preventive Maintenance Reports{% endblock %}
+{% block title %}Maintenance Reports{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -10,7 +10,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0">
                     <i class="fas fa-clipboard-list text-success"></i>
-                    Preventive Maintenance Reports
+                    Maintenance Reports
                 </h1>
                 <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -23,9 +23,19 @@
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ url_for('main.maintenance_report_card') }}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i> Create New Report
-                </a>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="reportTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-plus-circle"></i> Create New Report
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="reportTypeDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('main.maintenance_report_card', report_type='preventive') }}">
+                            <i class="fas fa-calendar-check"></i> Preventive Maintenance
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.maintenance_report_card', report_type='corrective') }}">
+                            <i class="fas fa-tools"></i> Corrective Maintenance
+                        </a></li>
+                    </ul>
+                </div>
                 <a href="{{ url_for('preventive.calendar_view') }}" class="btn btn-secondary">
                     <i class="fas fa-calendar"></i> Go to Calendar
                 </a>
@@ -162,9 +172,172 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Corrective Maintenance Section -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h2 class="h4 mb-4">
+                <i class="fas fa-wrench text-danger"></i>
+                Corrective Maintenance Tasks
+            </h2>
+        </div>
+    </div>
+
+    <!-- Corrective Maintenance Filters -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card bg-light rounded-lg">
+                <div class="card-body py-3">
+                    <div class="row g-2">
+                        <div class="col-auto">
+                            <input type="text" class="form-control form-control-sm" id="correctiveSearchInput" placeholder="Search by machine or technician...">
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select form-select-sm" id="correctiveStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-primary" onclick="filterCorrectiveReports()">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                        <div class="col-auto ms-auto">
+                            <button class="btn btn-sm btn-secondary" onclick="resetCorrectiveFilters()">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Corrective Maintenance Table -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table table-hover rounded-table" id="correctiveTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="border-top-left-radius: 12px;">Machine</th>
+                            <th>Technician</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                            <th>Duration (hrs)</th>
+                            <th>Issues Found</th>
+                            <th style="border-top-right-radius: 12px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="correctiveTableBody">
+                        {% if corrective_reports %}
+                            {% for report in corrective_reports %}
+                            <tr class="corrective-row" data-machine="{{ report.machine_name }}" data-technician="{{ report.technician.full_name if report.technician else '' }}" data-status="{{ report.report_status }}">
+                                <td>
+                                    <strong>{{ report.machine_name if report.machine_name else 'N/A' }}</strong>
+                                </td>
+                                <td>
+                                    {{ report.technician.full_name if report.technician else 'Unassigned' }}
+                                </td>
+                                <td>
+                                    {% if report.report_status == 'draft' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                    {% elif report.report_status == 'submitted' %}
+                                        <span class="badge bg-info">Submitted</span>
+                                    {% elif report.report_status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif report.report_status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ report.report_status|default('Unknown')|upper }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ report.created_at.strftime('%Y-%m-%d') if report.created_at else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ report.actual_duration_hours if report.actual_duration_hours else '--' }}</small>
+                                </td>
+                                <td>
+                                    {% if report.issues_found %}
+                                        <span class="badge bg-danger">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-success">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('maintenance.download_maintenance_report', report_id=report.id) }}" class="btn btn-outline-primary" title="Download PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% if report.report_status == 'draft' %}
+                                        <a href="{{ url_for('main.maintenance_report_card', report_id=report.id) }}" class="btn btn-outline-info" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox"></i> No corrective maintenance reports found.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
+.rounded-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rounded-table thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.rounded-table thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.rounded-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.rounded-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+.rounded-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.rounded-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table-light {
+    background-color: #f0f4f8;
+}
+
+.rounded-lg {
+    border-radius: 12px;
+}
+
 .border-left {
     border-left: 5px solid #10b981 !important;
 }
@@ -186,6 +359,47 @@
 .progress {
     font-size: 0.75rem;
     font-weight: bold;
+}
+
+/* Corrective Maintenance Table Styling */
+.rounded-table td, .rounded-table th {
+    padding: 12px 16px;
+    border: 1px solid #e0e7ff;
+    vertical-align: middle;
+}
+
+.rounded-table thead th {
+    font-weight: 600;
+    color: #2d3748;
+    background-color: #f0f4f8;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.rounded-table tbody td {
+    background-color: #fff;
+}
+
+.rounded-table .btn-group-sm .btn {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+.rounded-table .btn-outline-primary {
+    color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.rounded-table .btn-outline-primary:hover {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+.rounded-table .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
 }
 </style>
 
@@ -219,6 +433,39 @@ function resetFilters() {
 document.getElementById('searchInput').addEventListener('keyup', function(e) {
     if (e.key === 'Enter') {
         filterReports();
+    }
+});
+
+// Corrective Maintenance Filtering Functions
+function filterCorrectiveReports() {
+    const searchTerm = document.getElementById('correctiveSearchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('correctiveStatusFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('.corrective-row');
+
+    rows.forEach(row => {
+        const machine = row.dataset.machine.toLowerCase();
+        const technician = row.dataset.technician.toLowerCase();
+        const status = row.dataset.status.toLowerCase();
+        
+        const matchesSearch = machine.includes(searchTerm) || technician.includes(searchTerm);
+        const matchesStatus = !statusFilter || status.includes(statusFilter);
+        
+        row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+    });
+}
+
+function resetCorrectiveFilters() {
+    document.getElementById('correctiveSearchInput').value = '';
+    document.getElementById('correctiveStatusFilter').value = '';
+    document.querySelectorAll('.corrective-row').forEach(row => {
+        row.style.display = '';
+    });
+}
+
+// Allow filtering on Enter key for corrective search
+document.getElementById('correctiveSearchInput').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') {
+        filterCorrectiveReports();
     }
 });
 </script>

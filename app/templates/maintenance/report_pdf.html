@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapport de Préventive</title>
+    <title>Rapport de Maintenance Corrective</title>
     <style>
         * {
             margin: 0;
@@ -180,141 +180,148 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">SEBN-TN</div>
-            <div class="report-title">Rapport de Préventive</div>
+            <div class="report-title">Rapport de Maintenance Corrective</div>
         </div>
         
         <!-- Main Information Grid -->
         <div class="info-grid">
             <div class="info-item">
-                <div class="info-label">Type de préventive</div>
-                <div class="info-value">{% if execution and execution.preventive_maintenance %}{{ execution.preventive_maintenance.frequency }}{% else %}N/A{% endif %}</div>
+                <div class="info-label">Type de maintenance</div>
+                <div class="info-value">Corrective</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Zone</div>
-                <div class="info-value">{% if execution and execution.preventive_maintenance and execution.preventive_maintenance.machine %}{{ execution.preventive_maintenance.machine.zone }}{% else %}N/A{% endif %}</div>
+                <div class="info-value">{{ report.technician_zone or 'N/A' }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Date de réalisation</div>
-                <div class="info-value">{{ execution.actual_execution_date.strftime('%d/%m/%Y %H:%M') if execution and execution.actual_execution_date else 'N/A' }}</div>
+                <div class="info-value">{{ report.actual_start_time.strftime('%d/%m/%Y %H:%M') if report.actual_start_time else 'N/A' }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">N°Machine</div>
-                <div class="info-value">{% if execution and execution.preventive_maintenance and execution.preventive_maintenance.machine %}{{ execution.preventive_maintenance.machine.machine_name }}{% else %}N/A{% endif %}</div>
+                <div class="info-value">{{ report.machine_name or 'N/A' }}</div>
             </div>
         </div>
         
         <div class="info-grid">
             <div class="info-item">
-                <div class="info-label">Durée de Préventive</div>
-                <div class="info-value">{{ '%02d:%02d:%02d' % (execution.duration_hours // 1, int((execution.duration_hours % 1) * 60), 0) if execution and execution.duration_hours else '00:00:00' }}</div>
+                <div class="info-label">Durée de Maintenance</div>
+                <div class="info-value">{{ '%02d:%02d:%02d' % (int(report.actual_duration_hours) if report.actual_duration_hours else 0, int(((report.actual_duration_hours or 0) % 1) * 60), 0) }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">SN°</div>
-                <div class="info-value">{% if execution and execution.preventive_maintenance and execution.preventive_maintenance.machine %}{{ execution.preventive_maintenance.machine.serial_number }}{% else %}N/A{% endif %}</div>
+                <div class="info-value">{% if schedule and schedule.machine %}{{ schedule.machine.serial_number }}{% else %}N/A{% endif %}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Nom de technicien</div>
-                <div class="info-value">{{ execution.technician.full_name if execution.technician else 'N/A' }}</div>
+                <div class="info-value">{{ report.technician.full_name if report.technician else 'N/A' }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">N°ordre</div>
-                <div class="info-value">{{ execution.id }}</div>
+                <div class="info-value">{{ report.id }}</div>
             </div>
         </div>
         
-        <!-- Tasks Table -->
-        <div class="section-title">Points a vérifier</div>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Points a vérifier</th>
-                    <th style="width: 20%;">Moyens auxiliaires</th>
-                    <th style="width: 30%;">Détail</th>
-                    <th style="width: 10%;">Durée</th>
-                    <th style="width: 8%;">État</th>
-                    <th style="width: 7%;">Commentaire</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if task_executions %}
-                    {% for task_exec in task_executions %}
-                    <tr>
-                        <td>{{ task_exec.preventive_maintenance_task.task_name if task_exec.preventive_maintenance_task else 'Task ' ~ loop.index }}</td>
-                        <td>{{ task_exec.preventive_maintenance_task.tools_required or '-' }}</td>
-                        <td>{{ task_exec.task_details or 'Standard maintenance' }}</td>
-                        <td>{{ task_exec.time_spent or '-' }}</td>
-                        <td>
-                            {% if task_exec.status == 'completed' or task_exec.status == 'ok' %}
-                                <span class="status-ok">OK</span>
-                            {% elif task_exec.status == 'issue_found' or task_exec.status == 'nok' %}
-                                <span class="status-nok">NOT OK</span>
-                            {% else %}
-                                {{ task_exec.status|upper }}
-                            {% endif %}
-                        </td>
-                        <td>{{ task_exec.comment or '-' }}</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: #999;">No tasks recorded</td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-        
-        <!-- Observations -->
-        <div class="section-title">Observations et Résultats</div>
+        <!-- Work Details -->
+        <div class="section-title">Description du Travail</div>
         
         <div class="observations-grid">
             <div class="observation-item">
-                <div class="observation-label">Condition de la machine avant</div>
-                <div class="text-area">{{ execution.condition_before_execution or 'Not specified' }}</div>
+                <div class="observation-label">Description du travail effectué</div>
+                <div class="text-area">{{ report.work_description or 'Not specified' }}</div>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Heure de début</div>
+                <div class="info-value">{{ report.actual_start_time.strftime('%H:%M') if report.actual_start_time else 'N/A' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Heure de fin</div>
+                <div class="info-value">{{ report.actual_end_time.strftime('%H:%M') if report.actual_end_time else 'N/A' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">État machine après</div>
+                <div class="info-value">{{ report.machine_condition_after or 'N/A' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Statut du rapport</div>
+                <div class="info-value">{{ report.report_status|title }}</div>
+            </div>
+        </div>
+        
+        <!-- Findings and Actions -->
+        <div class="section-title">Constatations et Actions</div>
+        
+        <div class="observations-grid">
+            <div class="observation-item">
+                <div class="observation-label">Constatations</div>
+                <div class="text-area">{{ report.findings or 'No findings recorded' }}</div>
             </div>
         </div>
         
         <div class="observations-grid">
             <div class="observation-item">
-                <div class="observation-label">Condition de la machine après</div>
-                <div class="text-area">{{ execution.condition_after_execution or 'Not specified' }}</div>
-            </div>
-        </div>
-        
-        <div class="observations-grid">
-            <div class="observation-item">
-                <div class="observation-label">Observations générales</div>
-                <div class="text-area">{{ execution.findings or 'No findings recorded' }}</div>
+                <div class="observation-label">Actions effectuées</div>
+                <div class="text-area">{{ report.actions_taken or 'Not specified' }}</div>
             </div>
         </div>
         
         <div class="observations-grid">
             <div class="observation-item">
                 <div class="observation-label">Pièces remplacées</div>
-                <div class="text-area">{{ execution.components_replaced or 'No components replaced' }}</div>
+                <div class="text-area">{{ report.components_replaced or 'No components replaced' }}</div>
             </div>
         </div>
+        
+        <!-- Issues -->
+        <div class="section-title">Problèmes Identifiés</div>
+        
+        <div class="info-grid">
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">Problèmes trouvés</div>
+                <div class="info-value">
+                    {% if report.issues_found %}
+                        <span class="status-nok">OUI</span>
+                    {% else %}
+                        <span class="status-ok">NON</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if report.issues_found %}
+        <div class="observations-grid">
+            <div class="observation-item">
+                <div class="observation-label">Description des problèmes</div>
+                <div class="text-area">{{ report.issue_description or 'Not specified' }}</div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Safety & Recommendations -->
+        <div class="section-title">Sécurité et Recommandations</div>
         
         <div class="observations-grid">
             <div class="observation-item">
                 <div class="observation-label">Observations de sécurité</div>
-                <div class="text-area">{{ execution.safety_observations or 'No safety issues noted' }}</div>
+                <div class="text-area">{{ report.safety_observations or 'No safety issues noted' }}</div>
             </div>
         </div>
         
-        {% if execution.issues_found %}
         <div class="observations-grid">
             <div class="observation-item">
-                <div class="observation-label">Problèmes identifiés</div>
-                <div class="text-area">{{ execution.issue_description or 'Not specified' }}</div>
+                <div class="observation-label">Recommandation prochaine maintenance</div>
+                <div class="text-area">{{ report.next_maintenance_recommendation or 'As per schedule' }}</div>
             </div>
         </div>
-        {% endif %}
         
         <!-- Footer -->
         <div class="footer">
             <p style="margin: 5px 0;"><strong>SUMITOMO WIRING SYSTEMS</strong></p>
             <p style="margin: 3px 0;">Date de rapport: {{ now.strftime('%d/%m/%Y %H:%M:%S') }}</p>
-            <p style="margin: 3px 0;">Statut: {{ execution.report_status|title }} | N°Rapport: {{ execution.id }}</p>
+            <p style="margin: 3px 0;">Statut: {{ report.report_status|title }} | N°Rapport: {{ report.id }}</p>
         </div>
     </div>
 </body>

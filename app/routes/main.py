@@ -1,8 +1,19 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.models import db, Material, Machine, MaintenanceSchedule, SparePartsDemand, StockAlert, User, MaterialReturn, Zone, MaintenanceReport, StockMovement, PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, MachineStatus
 from app.routes.auth import login_required, role_required
+from app.email_service import EmailService
 from datetime import datetime, timedelta
 import json
+import logging
+
+# Configure logging
+logger = logging.getLogger('MaintenanceAPI')
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 main_bp = Blueprint('main', __name__)
 
@@ -99,7 +110,7 @@ def dashboard():
             'color': '#06b6d4'
         },
         'preventive_reports': {
-            'title': 'Preventive Maintenance Reports',
+            'title': 'Maintenance Reports',
             'icon': 'clipboard-list',
             'description': 'View preventive maintenance execution reports',
             'url': 'main.preventive_reports_view',
@@ -143,8 +154,10 @@ def dashboard():
         SparePartsDemand.demand_status.in_(['pending', 'supervisor_review', 'stock_agent_review'])
     ).count()
     
-    # Stock alerts
-    stock_alerts = StockAlert.query.filter_by(is_read=False).count()
+    # Stock alerts - only for authorized roles
+    stock_alerts = 0
+    if user.role in ['admin', 'supervisor', 'stock_agent']:
+        stock_alerts = StockAlert.query.filter_by(is_read=False).count()
     
     # Critical materials
     critical_materials = Material.query.filter(
@@ -186,7 +199,8 @@ def dashboard():
         stats=stats,
         modules=all_modules,
         recent_demands=recent_demands,
-        recent_maintenance=recent_maintenance
+        recent_maintenance=recent_maintenance,
+        stock_alerts_count=stock_alerts
     )
 
 
@@ -262,6 +276,123 @@ def maintenance_kpis():
     return render_template('main/maintenance_kpis.html', **context)
 
 
+# ============================================
+# CORRECTIVE MAINTENANCE ITEMS
+# ============================================
+CORRECTIVE_MAINTENANCE_ITEMS = [
+    # Mécanique (Mechanical)
+    {'id': 'corr_001', 'name': 'Changement oreil a collet enduit', 'category': 'Mécanique'},
+    {'id': 'corr_002', 'name': 'Ajustement unité redressement', 'category': 'Mécanique'},
+    {'id': 'corr_003', 'name': 'Changement galet', 'category': 'Mécanique'},
+    {'id': 'corr_004', 'name': 'Ajustement wire drive', 'category': 'Mécanique'},
+    {'id': 'corr_005', 'name': 'Changement courroies crantées', 'category': 'Mécanique'},
+    {'id': 'corr_006', 'name': 'Changement roue de mesure', 'category': 'Mécanique'},
+    {'id': 'corr_007', 'name': 'Changement roues dentées (Z32)', 'category': 'Mécanique'},
+    {'id': 'corr_008', 'name': 'Changement roues dentées (Z18)', 'category': 'Mécanique'},
+    {'id': 'corr_009', 'name': 'Changement galet de pression', 'category': 'Mécanique'},
+    {'id': 'corr_010', 'name': 'Changement capot de protection', 'category': 'Mécanique'},
+    {'id': 'corr_011', 'name': 'Réglage roue de mesure', 'category': 'Mécanique'},
+    {'id': 'corr_012', 'name': 'Changement guide cable', 'category': 'Mécanique'},
+    {'id': 'corr_013', 'name': 'Changement axe d\'encodeur', 'category': 'Mécanique'},
+    {'id': 'corr_014', 'name': 'Changement roullement rainurée', 'category': 'Mécanique'},
+    {'id': 'corr_015', 'name': 'Ajustement des machoires', 'category': 'Mécanique'},
+    {'id': 'corr_016', 'name': 'Changement machoires', 'category': 'Mécanique'},
+    {'id': 'corr_017', 'name': 'Changement Pivotement CPL', 'category': 'Mécanique'},
+    {'id': 'corr_018', 'name': 'Vérification bloc de lames après 150.000 coupes', 'category': 'Mécanique'},
+    {'id': 'corr_019', 'name': 'Changement lames a dénudés', 'category': 'Mécanique'},
+    {'id': 'corr_020', 'name': 'Changement lames de coupe', 'category': 'Mécanique'},
+    {'id': 'corr_021', 'name': 'Ajustement tete de coupe', 'category': 'Mécanique'},
+    {'id': 'corr_022', 'name': 'Changement tole bloc d\'arret', 'category': 'Mécanique'},
+    {'id': 'corr_023', 'name': 'Changemnt tole de guidage (vé de centrage)', 'category': 'Mécanique'},
+    {'id': 'corr_024', 'name': 'Changement vérin tole de guidage', 'category': 'Mécanique'},
+    {'id': 'corr_025', 'name': 'Changement appui cpl', 'category': 'Mécanique'},
+    {'id': 'corr_026', 'name': 'Changement levier de fixation', 'category': 'Mécanique'},
+    {'id': 'corr_027', 'name': 'Changement manchon de fixation outil', 'category': 'Mécanique'},
+    {'id': 'corr_028', 'name': 'Changement coupe bande', 'category': 'Mécanique'},
+    {'id': 'corr_029', 'name': 'Changement lame de coupe bande', 'category': 'Mécanique'},
+    {'id': 'corr_030', 'name': 'Changement boitier de coupe bande', 'category': 'Mécanique'},
+    {'id': 'corr_031', 'name': 'Changement joint de coupe bande', 'category': 'Mécanique'},
+    {'id': 'corr_032', 'name': 'Changement piston de coupe bande', 'category': 'Mécanique'},
+    {'id': 'corr_033', 'name': 'Changement galet devant', 'category': 'Mécanique'},
+    {'id': 'corr_034', 'name': 'Changement galet en arriére', 'category': 'Mécanique'},
+    {'id': 'corr_035', 'name': 'Réglage tandeur', 'category': 'Mécanique'},
+    {'id': 'corr_036', 'name': 'Changement palque devant', 'category': 'Mécanique'},
+    {'id': 'corr_037', 'name': 'Changement plaque en arriére', 'category': 'Mécanique'},
+    {'id': 'corr_038', 'name': 'Reglage tapis transporteuse', 'category': 'Mécanique'},
+    {'id': 'corr_039', 'name': 'Rincage+centrage IMS', 'category': 'Mécanique'},
+    {'id': 'corr_040', 'name': 'Réglage K26', 'category': 'Mécanique'},
+    {'id': 'corr_041', 'name': 'Pb unitée d\'entrainement', 'category': 'Mécanique'},
+    {'id': 'corr_042', 'name': 'Centrage d\'applicateur seal', 'category': 'Mécanique'},
+    {'id': 'corr_043', 'name': 'Changement vibreur', 'category': 'Mécanique'},
+    {'id': 'corr_044', 'name': 'Reglage vibration seal', 'category': 'Mécanique'},
+    {'id': 'corr_045', 'name': 'Changement mondrin', 'category': 'Mécanique'},
+    {'id': 'corr_046', 'name': 'Changement dornpin', 'category': 'Mécanique'},
+    {'id': 'corr_047', 'name': 'Ajustement Touniquer', 'category': 'Mécanique'},
+    {'id': 'corr_048', 'name': 'Ajustement tete d\'insertion', 'category': 'Mécanique'},
+    {'id': 'corr_049', 'name': 'Patinage', 'category': 'Mécanique'},
+    {'id': 'corr_050', 'name': 'Ajustement coupe Bande', 'category': 'Mécanique'},
+    {'id': 'corr_051', 'name': 'Réglage variation denudage', 'category': 'Mécanique'},
+    {'id': 'corr_052', 'name': 'Réglage vé de centrage', 'category': 'Mécanique'},
+    {'id': 'corr_053', 'name': 'Réparation tole bloc d\'arrét', 'category': 'Mécanique'},
+    {'id': 'corr_054', 'name': 'Changement insertion sleeve', 'category': 'Mécanique'},
+    {'id': 'corr_055', 'name': 'Réglage enrouleur papier', 'category': 'Mécanique'},
+    {'id': 'corr_056', 'name': 'Réglage bras de pivotement coté 1', 'category': 'Mécanique'},
+    {'id': 'corr_057', 'name': 'Réglage bras de pivotement coté 2', 'category': 'Mécanique'},
+    {'id': 'corr_058', 'name': 'Changement manchant seal', 'category': 'Mécanique'},
+    {'id': 'corr_059', 'name': 'Réglage convoyeur', 'category': 'Mécanique'},
+    {'id': 'corr_060', 'name': 'Réglage goulette retractable', 'category': 'Mécanique'},
+    {'id': 'corr_061', 'name': 'Calibrage machine de traction', 'category': 'Mécanique'},
+    {'id': 'corr_062', 'name': 'Ajustement bande transporteuse', 'category': 'Mécanique'},
+    {'id': 'corr_063', 'name': 'Reglage unité de torsadage (twist)', 'category': 'Mécanique'},
+    {'id': 'corr_064', 'name': 'Module d\'orientation', 'category': 'Mécanique'},
+    {'id': 'corr_065', 'name': 'Remplacement Joint double station seal', 'category': 'Mécanique'},
+    {'id': 'corr_066', 'name': 'Probleme unité bandage sigma', 'category': 'Mécanique'},
+    {'id': 'corr_067', 'name': 'Probleme gulotte rettractable', 'category': 'Mécanique'},
+    
+    # Électrique (Electrical)
+    {'id': 'corr_101', 'name': 'Changement encodeur', 'category': 'Électrique'},
+    {'id': 'corr_102', 'name': 'Ajustement micro switch', 'category': 'Électrique'},
+    {'id': 'corr_103', 'name': 'Changement micro switch', 'category': 'Électrique'},
+    {'id': 'corr_104', 'name': 'Changement ACS116 (servomoteur)', 'category': 'Électrique'},
+    {'id': 'corr_105', 'name': 'Changement capteur des machoires', 'category': 'Électrique'},
+    {'id': 'corr_106', 'name': 'Changement capteur mouvement linéaire', 'category': 'Électrique'},
+    {'id': 'corr_107', 'name': 'Changement capteur mouvement rotationnelle', 'category': 'Électrique'},
+    {'id': 'corr_108', 'name': 'Changement moteur', 'category': 'Électrique'},
+    {'id': 'corr_109', 'name': 'Changement ACS108', 'category': 'Électrique'},
+    {'id': 'corr_110', 'name': 'Changement détecteur optique tole de guidage', 'category': 'Électrique'},
+    {'id': 'corr_111', 'name': 'Changement Barrage photoelectrique d\'enrouleur papier', 'category': 'Électrique'},
+    {'id': 'corr_112', 'name': 'Réglage MCD', 'category': 'Électrique'},
+    {'id': 'corr_113', 'name': 'Ajustement capteur bras de pivotement coté 1', 'category': 'Électrique'},
+    {'id': 'corr_114', 'name': 'Ajustement capteur bras de pivotement coté 2', 'category': 'Électrique'},
+    {'id': 'corr_115', 'name': 'Reglage capteur de présence seal', 'category': 'Électrique'},
+    {'id': 'corr_116', 'name': 'Changement capteur de présence seal', 'category': 'Électrique'},
+    {'id': 'corr_117', 'name': 'Reglage SPM', 'category': 'Électrique'},
+    {'id': 'corr_118', 'name': 'Changement capteur goulette retractable', 'category': 'Électrique'},
+    {'id': 'corr_119', 'name': 'Probléme ACS116 (servomoteur)', 'category': 'Électrique'},
+    {'id': 'corr_120', 'name': 'Probléme ACS108 (servomoteur)', 'category': 'Électrique'},
+    {'id': 'corr_121', 'name': 'Probléme ACS204 (servomoteur)', 'category': 'Électrique'},
+    {'id': 'corr_122', 'name': 'Changement ACS204 (servomoteur)', 'category': 'Électrique'},
+    {'id': 'corr_123', 'name': 'Problème servoregulateur', 'category': 'Électrique'},
+    {'id': 'corr_124', 'name': 'Changement cable MCI rg 45', 'category': 'Électrique'},
+    {'id': 'corr_125', 'name': 'Changement cable capteur', 'category': 'Électrique'},
+    
+    # Informatique/Soft
+    {'id': 'corr_201', 'name': 'Mise a jour ACS 116', 'category': 'Informatique/Soft'},
+    {'id': 'corr_202', 'name': 'Positionnement zéro', 'category': 'Informatique/Soft'},
+    {'id': 'corr_203', 'name': 'Mise a jour ACS 108', 'category': 'Informatique/Soft'},
+    {'id': 'corr_204', 'name': 'Étalonnage de presse', 'category': 'Informatique/Soft'},
+    {'id': 'corr_205', 'name': 'Positionnement zéro de presse', 'category': 'Informatique/Soft'},
+    {'id': 'corr_206', 'name': 'Ajustement et calibrage SQC', 'category': 'Informatique/Soft'},
+    {'id': 'corr_207', 'name': 'Installation CAO', 'category': 'Informatique/Soft'},
+    {'id': 'corr_208', 'name': 'Installation Topwin', 'category': 'Informatique/Soft'},
+    {'id': 'corr_209', 'name': 'Instattation Caméra', 'category': 'Informatique/Soft'},
+    {'id': 'corr_210', 'name': 'Probleme Topwin', 'category': 'Informatique/Soft'},
+    
+    # Pneumatique (Pneumatic)
+    {'id': 'corr_301', 'name': 'Reglage pneumatique d\'applicateur seal', 'category': 'Pneumatique'},
+]
+
+
 @main_bp.route('/maintenance-report', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'supervisor', 'technician')
@@ -334,14 +465,21 @@ def maintenance_report_card():
     # Handle final form submission
     if request.method == 'POST' and not request.is_json:
         try:
+            logger.info("=" * 80)
+            logger.info("MAINTENANCE REPORT SAVE PROCESS STARTED")
+            logger.info("=" * 80)
+            
             report_id = request.form.get('report_id')
+            logger.info(f"Processing report - Report ID: {report_id if report_id else 'NEW'}")
             
             # Get existing report or create new
             if report_id:
                 try:
                     report = MaintenanceReport.query.get(int(report_id))
+                    logger.info(f"Found existing report: {report_id}")
                 except:
                     report = None
+                    logger.warning(f"Could not find report with ID: {report_id}")
             else:
                 report = None
             
@@ -350,6 +488,7 @@ def maintenance_report_card():
                 report.technician_id = user.id
                 report.report_status = 'draft'
                 report.created_at = datetime.utcnow()
+                logger.info(f"Creating new maintenance report for technician: {user.full_name} (ID: {user.id})")
             
             # Update report with form data
             machine_id = request.form.get('machine_id')
@@ -357,6 +496,7 @@ def maintenance_report_card():
                 machine = Machine.query.get(int(machine_id))
                 if machine:
                     report.machine_name = machine.name
+                    logger.info(f"Machine assigned: {machine.name}")
             
             report.work_description = request.form.get('equipment', '')
             report.technician_zone = request.form.get('serial_number', '')
@@ -366,16 +506,65 @@ def maintenance_report_card():
             report.actual_end_time = datetime.utcnow()
             report.updated_at = datetime.utcnow()
             
+            logger.info(f"Report data populated - Status: {report.report_status}")
+            
+            # Save to database
             db.session.add(report)
             db.session.commit()
+            logger.info(f"✓ Report SAVED to database - Report ID: {report.id}")
             
-            flash('Rapport de maintenance enregistré et archivé avec succès!', 'success')
-            return redirect(url_for('main.dashboard'))
+            # Find supervisor and send email with PDF
+            supervisor = user.supervisor
+            if supervisor and supervisor.email:
+                logger.info(f"Attempting to send email to supervisor: {supervisor.full_name} ({supervisor.email})")
+                
+                try:
+                    # Generate PDF HTML
+                    pdf_html = render_template(
+                        'maintenance_report_card.html',
+                        report=report,
+                        current_user=user
+                    )
+                    
+                    logger.info("PDF HTML template rendered successfully")
+                    
+                    # Send report to supervisor
+                    email_sent = EmailService.send_maintenance_report_to_supervisor(
+                        report=report,
+                        supervisor=supervisor,
+                        pdf_html=pdf_html,
+                        report_type='corrective'
+                    )
+                    
+                    if email_sent:
+                        logger.info(f"✓ Email SENT to supervisor successfully - Report ID: {report.id}")
+                    else:
+                        logger.warning(f"Email sending returned False for Report ID: {report.id}")
+                        
+                except Exception as email_error:
+                    logger.error(f"✗ Failed to send email to supervisor: {type(email_error).__name__}: {str(email_error)}")
+                    logger.error("Email sending failed but report was saved successfully")
+            else:
+                logger.warning(f"No supervisor found or supervisor has no email - Report will not be sent to anyone")
+            
+            logger.info("=" * 80)
+            logger.info("MAINTENANCE REPORT SAVE PROCESS COMPLETED SUCCESSFULLY")
+            logger.info("=" * 80)
+            
+            flash('Maintenance report saved and sent to supervisor for approval!', 'success')
+            return redirect(url_for('main.maintenance_reports_archive'))
             
         except Exception as e:
+            logger.error("=" * 80)
+            logger.error("MAINTENANCE REPORT SAVE PROCESS FAILED")
+            logger.error("=" * 80)
+            logger.error(f"✗ Error type: {type(e).__name__}")
+            logger.error(f"✗ Error message: {str(e)}")
+            logger.error("Full traceback:", exc_info=True)
+            
             db.session.rollback()
             current_app.logger.error(f'Error submitting maintenance report: {str(e)}')
-            flash(f'Erreur lors de la soumission: {str(e)}', 'danger')
+            flash(f'Error submitting report: {str(e)}', 'danger')
             return redirect(url_for('main.maintenance_report_card'))
     
     # Handle GET request (display form)
@@ -387,11 +576,16 @@ def maintenance_report_card():
         report_status='draft'
     ).order_by(MaintenanceReport.created_at.desc()).first()
     
+    # Get unique categories for corrective maintenance
+    corrective_categories = sorted(list(set([item['category'] for item in CORRECTIVE_MAINTENANCE_ITEMS])))
+    
     return render_template(
         'maintenance_report_card.html',
         machines=machines,
         current_user=user,
-        draft_report=draft_report
+        draft_report=draft_report,
+        corrective_items=CORRECTIVE_MAINTENANCE_ITEMS,
+        corrective_categories=corrective_categories
     )
 
 
@@ -462,9 +656,66 @@ def preventive_reports_view():
             if e.assigned_technician_id == user.id
         ]
     
+    # Get corrective maintenance reports
+    corrective_reports = MaintenanceReport.query.filter(
+        MaintenanceReport.report_type.ilike('%corrective%')
+    ).order_by(MaintenanceReport.created_at.desc()).all()
+    
+    # Filter corrective reports based on user role
+    if user.role == 'technician':
+        corrective_reports = [
+            r for r in corrective_reports 
+            if r.technician_id == user.id
+        ]
+    
     return render_template(
         'preventive_reports_card_view.html',
         executions=executions,
+        corrective_reports=corrective_reports,
+        current_user=user
+    )
+
+
+@main_bp.route('/maintenance-reports/archive')
+@login_required
+def maintenance_reports_archive():
+    """View archive of submitted maintenance reports"""
+    user = User.query.get(session['user_id'])
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'all')
+    
+    logger.info(f"Loading maintenance reports archive for user: {user.full_name} (ID: {user.id})")
+    
+    # Base query
+    query = MaintenanceReport.query
+    
+    # Filter by status if specified
+    if status != 'all':
+        query = query.filter_by(report_status=status)
+        logger.info(f"Filtering reports by status: {status}")
+    
+    # Filter based on user role
+    if user.role == 'technician':
+        query = query.filter_by(technician_id=user.id)
+        logger.info(f"Filtering reports for technician")
+    elif user.role == 'supervisor':
+        # Supervisors see reports from their subordinates
+        subordinate_ids = [s.id for s in user.subordinates]
+        if subordinate_ids:
+            query = query.filter(MaintenanceReport.technician_id.in_(subordinate_ids))
+            logger.info(f"Filtering reports for supervisor's subordinates: {subordinate_ids}")
+    
+    # Order by most recent first
+    reports = query.order_by(
+        MaintenanceReport.updated_at.desc()
+    ).paginate(page=page, per_page=20)
+    
+    logger.info(f"Retrieved {reports.total} total reports, showing page {page} ({len(reports.items)} items)")
+    
+    return render_template(
+        'maintenance_reports_archive.html',
+        reports=reports,
+        status_filter=status,
         current_user=user
     )
 
@@ -864,6 +1115,7 @@ def material_detail(material_id):
 
 @stock_bp.route('/alerts')
 @login_required
+@role_required('admin', 'supervisor', 'stock_agent')
 def stock_alerts():
     page = request.args.get('page', 1, type=int)
     unread_only = request.args.get('unread', 'true').lower() == 'true'
@@ -878,6 +1130,7 @@ def stock_alerts():
 
 @stock_bp.route('/alert/<int:alert_id>/mark-read', methods=['POST'])
 @login_required
+@role_required('admin', 'supervisor', 'stock_agent')
 def mark_alert_read(alert_id):
     alert = StockAlert.query.get_or_404(alert_id)
     alert.is_read = True
@@ -889,6 +1142,7 @@ def mark_alert_read(alert_id):
 
 @stock_bp.route('/alert/<int:alert_id>/skip')
 @login_required
+@role_required('admin', 'supervisor', 'stock_agent')
 def skip_alert(alert_id):
     """Quick action to skip/acknowledge a stock alert from an email link."""
     alert = StockAlert.query.get_or_404(alert_id)

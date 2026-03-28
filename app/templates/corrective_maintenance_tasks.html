@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+
+{% block title %}Corrective Maintenance Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-header {
+        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .category-header h2 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .category-header .task-stats {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin-top: 0.5rem;
+    }
+
+    .filter-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .filter-input {
+        flex: 1;
+        border: none;
+        padding: 0.75rem;
+        background: #f3f4f6;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        background: #e5e7eb;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .filter-icon {
+        color: #ef4444;
+        font-size: 1.25rem;
+    }
+
+    .filter-count {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .maintenance-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .maintenance-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .maintenance-table thead {
+        background: #f3f4f6;
+    }
+
+    .maintenance-table thead th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #ef4444;
+        border-bottom: 2px solid #f87171;
+    }
+
+    .maintenance-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .maintenance-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .task-number {
+        font-weight: 600;
+        color: #ef4444;
+        width: 60px;
+        text-align: center;
+    }
+
+    .task-category {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        background: white;
+    }
+
+    .status-select:focus {
+        outline: none;
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .remarks-input {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 40px;
+    }
+
+    .remarks-input:focus {
+        outline: none;
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-action-start {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-action-start:hover {
+        background: #dc2626;
+    }
+
+    .footer-stats {
+        background: #fef2f2;
+        border-top: 2px solid #ef4444;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ef4444;
+    }
+
+    .stat-item .stat-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 0.75rem;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-cancel {
+        width: 100%;
+        padding: 0.75rem;
+        background: #e5e7eb;
+        color: #374151;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #d1d5db;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .task-timer-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timer-button {
+        padding: 0.4rem 0.8rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .timer-start {
+        background: #ef4444;
+        color: white;
+    }
+
+    .timer-start:hover:not(:disabled) {
+        background: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    .timer-start:disabled {
+        background: #d1d5db;
+        color: #6b7280;
+        cursor: not-allowed;
+    }
+
+    .timer-stop {
+        background: #10b981;
+        color: white;
+    }
+
+    .timer-stop:hover:not(:disabled) {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .timer-stop:disabled {
+        background: #d1d5db;
+        color: #6b7280;
+        cursor: not-allowed;
+    }
+
+    .timer-display {
+        min-width: 60px;
+        text-align: center;
+        font-weight: 600;
+        color: #ef4444;
+        padding: 0.4rem;
+        border-radius: 4px;
+        background: #fef2f2;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .timer-display:hover {
+        background: #fee2e2;
+    }
+
+    .timer-display.running {
+        animation: pulse 1s infinite;
+        background: #fee2e2;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    input[type="date"]:read-only {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+        color: #6b7280;
+    }
+
+    input[type="date"]:read-only::-webkit-calendar-picker-indicator {
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="fas fa-tools"></i>
+                        Corrective Maintenance Report
+                    </h1>
+                    <p class="text-muted mt-2">Report issues, repairs and corrective actions</p>
+                </div>
+                <a href="{{ url_for('main.preventive_reports_view') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Machine and Date Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <label class="form-label fw-bold text-muted">Zone</label>
+                    <p class="mb-0 fs-5">{{ zone.name }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <label class="form-label fw-bold text-muted">Machine</label>
+                    <p class="mb-0 fs-5">{{ machine.name }} ({{ machine.code }})</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Date -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label class="form-label"><strong>Execution Date</strong></label>
+            <input type="date" id="executionDate" class="form-control form-control-lg" required readonly>
+        </div>
+    </div>
+
+    <!-- Category Header -->
+    <div class="category-header">
+        <h2>
+            <i class="fas fa-wrench"></i>
+            Corrective Tasks ({{ tasks|length }} items)
+        </h2>
+        <div class="task-stats">
+            <i class="fas fa-hourglass-split"></i>
+            Please select the corrective tasks that need to be performed
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <i class="fas fa-search filter-icon"></i>
+        <input type="text" id="correctiveFilter" class="filter-input" placeholder="Search for corrective task..." autocomplete="off">
+        <span class="filter-count"><span id="correctiveTaskCount">{{ tasks|length }}</span> task(s)</span>
+    </div>
+
+    <!-- Form Start -->
+    <form id="correctiveForm" method="POST">
+        <!-- Tasks Table -->
+        <div class="maintenance-table table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="task-number">N°</th>
+                        <th>Task Description</th>
+                        <th style="width: 120px; text-align: center;">Category</th>
+                        <th style="width: 100px; text-align: center;">Select</th>
+                        <th style="width: 120px; text-align: center;">Time (min)</th>
+                        <th style="width: 250px; text-align: center;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="correctiveTableBody">
+                    {% for task in tasks %}
+                    <tr class="task-row" data-task-id="{{ task.id }}" data-category="{{ task.category }}">
+                        <td class="task-number">{{ loop.index }}</td>
+                        <td>{{ task.name }}</td>
+                        <td style="text-align: center;"><span class="task-category">{{ task.category }}</span></td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" name="task_{{ task.id }}_selected" class="form-check-input task-checkbox" value="1">
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="task-timer-container">
+                                <button type="button" class="timer-button timer-start" id="start_task_{{ task.id }}" onclick="startTimer({{ task.id }}); return false;">Start</button>
+                                <button type="button" class="timer-button timer-stop" id="stop_task_{{ task.id }}" onclick="stopTimer({{ task.id }}); return false;" disabled>Stop</button>
+                                <div class="timer-display" id="display_task_{{ task.id }}" title="Click to edit duration" onclick="editDuration({{ task.id }})">0m</div>
+                                <input type="hidden" id="time_task_{{ task.id }}" name="task_{{ task.id }}_time" value="0">
+                            </div>
+                        </td>
+                        <td>
+                            <textarea name="task_{{ task.id }}_remarks" class="form-control form-control-sm remarks-input"></textarea>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Footer Stats -->
+            <div class="footer-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="selectedCount">0</div>
+                    <div class="stat-label">Selected</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalTime">0</div>
+                    <div class="stat-label">Total Time (min)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="visibleCount">{{ tasks|length }}</div>
+                    <div class="stat-label">Visible</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Description -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <label class="form-label"><strong>Issue Description</strong></label>
+                <textarea name="issue_description" class="form-control" rows="4" placeholder="Describe the issue that was reported..."></textarea>
+            </div>
+        </div>
+
+        <!-- Solution Applied -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <label class="form-label"><strong>Solution Applied</strong></label>
+                <textarea name="solution_applied" class="form-control" rows="4" placeholder="Describe the solution and corrective actions taken..."></textarea>
+            </div>
+        </div>
+
+        <!-- Spare Parts Used -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <label class="form-label"><strong>Spare Parts/Materials Used</strong></label>
+                <textarea name="spare_parts_used" class="form-control" rows="3" placeholder="List any spare parts, materials or tools that were used..."></textarea>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check-lg"></i> Submit Corrective Report
+                </button>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('main.preventive_reports_view') }}" class="btn-cancel">
+                    <i class="fas fa-times-lg"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Set today's date as default
+    document.getElementById('executionDate').valueAsDate = new Date();
+
+    // Timer tracking for each task
+    const timers = {};
+
+    // Filter functionality
+    const correctiveFilterInput = document.getElementById('correctiveFilter');
+    correctiveFilterInput.addEventListener('keyup', function() {
+        const searchText = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#correctiveTableBody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const taskText = row.textContent.toLowerCase();
+            const isVisible = searchText === '' || taskText.includes(searchText);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) {
+                visibleCount++;
+            }
+        });
+
+        document.getElementById('correctiveTaskCount').textContent = visibleCount;
+        document.getElementById('visibleCount').textContent = visibleCount;
+    });
+
+    // Update task selection counts
+    function updateTaskCounts() {
+        const checkboxes = document.querySelectorAll('#correctiveTableBody .task-checkbox:checked');
+        let totalTime = 0;
+
+        checkboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            const taskId = row.dataset.taskId;
+            const timeInput = document.getElementById(`time_task_${taskId}`);
+            const time = parseInt(timeInput.value) || 0;
+            totalTime += time;
+        });
+
+        document.getElementById('selectedCount').textContent = checkboxes.length;
+        document.getElementById('totalTime').textContent = totalTime;
+    }
+
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateTaskCounts);
+    });
+
+    // Timer functions
+    function startTimer(taskId) {
+        const startBtn = document.getElementById(`start_task_${taskId}`);
+        const stopBtn = document.getElementById(`stop_task_${taskId}`);
+        
+        if (timers[taskId]) return; // Already running
+        
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        
+        timers[taskId] = {
+            startTime: Date.now(),
+            interval: setInterval(() => {
+                const elapsed = Math.floor((Date.now() - timers[taskId].startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById(`display_task_${taskId}`).textContent = `${minutes}m ${seconds}s`;
+                document.getElementById(`display_task_${taskId}`).classList.add('running');
+            }, 1000)
+        };
+    }
+
+    function stopTimer(taskId) {
+        if (!timers[taskId]) return;
+        
+        clearInterval(timers[taskId].interval);
+        const elapsed = Math.floor((Date.now() - timers[taskId].startTime) / 60000);
+        
+        document.getElementById(`time_task_${taskId}`).value = elapsed;
+        document.getElementById(`display_task_${taskId}`).textContent = `${elapsed}m`;
+        document.getElementById(`display_task_${taskId}`).classList.remove('running');
+        document.getElementById(`start_task_${taskId}`).disabled = false;
+        document.getElementById(`stop_task_${taskId}`).disabled = true;
+        
+        delete timers[taskId];
+        updateTaskCounts();
+    }
+
+    function editDuration(taskId) {
+        const current = document.getElementById(`time_task_${taskId}`).value;
+        const newValue = prompt('Enter duration in minutes:', current);
+        if (newValue !== null && !isNaN(newValue)) {
+            document.getElementById(`time_task_${taskId}`).value = newValue;
+            document.getElementById(`display_task_${taskId}`).textContent = `${newValue}m`;
+            updateTaskCounts();
+        }
+    }
+</script>
+{% endblock %}

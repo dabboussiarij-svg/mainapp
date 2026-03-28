@@ -195,6 +195,7 @@
 // Timer tracking - completely separate from form
 let timers = {};
 let startTimes = {};
+let activeTimerId = null; // Global variable to track which timer is currently running (only one at a time)
 
 // Prevent any accidental form submission
 document.addEventListener('DOMContentLoaded', function() {
@@ -207,12 +208,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Helper function to get all start buttons and disable others
+function disableOtherStartButtons(exceptTaskId) {
+    const rows = document.querySelectorAll('tbody tr[id^="task-"]');
+    rows.forEach(row => {
+        const button = row.querySelector('button.btn-success:not(.started)');
+        if (button) {
+            const taskIdMatch = row.id.match(/task-(\d+)/);
+            if (taskIdMatch) {
+                const taskId = parseInt(taskIdMatch[1]);
+                button.disabled = activeTimerId !== null && taskId !== exceptTaskId;
+                button.title = activeTimerId !== null && taskId !== exceptTaskId 
+                    ? `Another timer is running (Task ${activeTimerId}). Stop it first.` 
+                    : '';
+            }
+        }
+    });
+}
+
+// Helper function to enable all start buttons
+function enableAllStartButtons() {
+    const rows = document.querySelectorAll('tbody tr[id^="task-"]');
+    rows.forEach(row => {
+        const button = row.querySelector('button.btn-success:not(.started)');
+        if (button) {
+            button.disabled = false;
+            button.title = '';
+        }
+    });
+}
+
 // Start task timer - pure timer function, no side effects
 function startTask(event, taskId) {
     event.preventDefault();
     event.stopPropagation();
     
-    alert('hi');
+    // Check if another timer is already running
+    if (activeTimerId !== null && activeTimerId !== taskId) {
+        alert(`⚠️ Timer for Task ${activeTimerId} is already running!\n\nOnly one timer can run at a time. Please stop it first before starting another.`);
+        return false;
+    }
     
     const url = `{{ url_for('preventive.start_task', task_exec_id=0) }}`.replace('/0', '/' + taskId);
     
@@ -225,6 +260,7 @@ function startTask(event, taskId) {
         if (data.success) {
             // Store start time
             startTimes[taskId] = new Date(data.start_time);
+            activeTimerId = taskId; // Set this as the active timer
             
             // Get the row and cells
             const row = document.getElementById('task-' + taskId);
@@ -242,6 +278,9 @@ function startTask(event, taskId) {
             
             // Replace button with End button
             actionCell.innerHTML = '<button type="button" class="btn btn-sm btn-primary" onclick="endTask(event, ' + taskId + '); return false;"><i class="fas fa-stop"></i> End</button>';
+            
+            // Disable all other start buttons
+            disableOtherStartButtons(taskId);
             
             // Start timer display
             timers[taskId] = setInterval(() => {
@@ -298,6 +337,26 @@ function endTask(event, taskId) {
             
             // Update display
             durationCell.textContent = durationMinutes + ' min';
+            
+            if (statusCell) {
+                statusCell.className = 'badge badge-success';
+                statusCell.textContent = 'COMPLETED';
+            }
+            
+            actionCell.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Done</span>';
+            
+            // Clear active timer and re-enable all start buttons
+            if (activeTimerId === taskId) {
+                activeTimerId = null;
+                enableAllStartButtons();
+            }
+        }
+    })
+    .catch(err => console.error('Error ending task:', err));
+    
+    return false;
+}
+</script>
             
             if (statusCell) {
                 statusCell.className = 'badge badge-success';
