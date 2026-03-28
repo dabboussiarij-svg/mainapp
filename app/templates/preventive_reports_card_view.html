@@ -28,11 +28,22 @@
                         <i class="fas fa-plus-circle"></i> Create New Report
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="reportTypeDropdown">
-                        <li><a class="dropdown-item" href="{{ url_for('main.maintenance_report_card', report_type='preventive') }}">
-                            <i class="fas fa-calendar-check"></i> Preventive Maintenance
+                        <li><a class="dropdown-item" href="{{ url_for('main.new_maintenance_report_wizard') }}">
+                            <i class="fas fa-magic"></i> New Report (Wizard)
                         </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('preventive.monthly_preventive') }}">
+                            <i class="fas fa-calendar-check"></i> Monthly Preventive Systematic Maintenance
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('preventive.semi_annual_preventive') }}">
+                            <i class="fas fa-calendar-check"></i> Semi-Annual Preventive Systematic Maintenance
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('main.maintenance_report_card', report_type='corrective') }}">
                             <i class="fas fa-tools"></i> Corrective Maintenance
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.corrective_maintenance_tasks') }}">
+                            <i class="fas fa-table"></i> Browse Corrective Tasks
                         </a></li>
                     </ul>
                 </div>

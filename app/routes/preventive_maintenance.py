@@ -999,3 +999,83 @@ def download_preventive_report(execution_id):
     except Exception as e:
         flash(f'Error generating PDF: {str(e)}', 'danger')
         return redirect(url_for('preventive.executions'))
+
+# ============================================
+# MONTHLY PREVENTIVE SYSTEMATIC MAINTENANCE
+# ============================================
+
+@preventive_bp.route('/monthly', methods=['GET', 'POST'])
+@login_required
+def monthly_preventive():
+    """Monthly preventive systematic maintenance report"""
+    user = User.query.get(session['user_id'])
+    machines = Machine.query.filter_by(status='active').all()
+    
+    # Original hardcoded monthly tasks (1-29)
+    tasks = [
+        {'number': 1, 'id': 1, 'description': 'Check safety system (emergency stop...)', 'criteria': 'Fonctionnel', 'duration': 10},
+        {'number': 2, 'id': 2, 'description': 'État des accessoires', 'criteria': 'Bon état', 'duration': 8},
+        {'number': 3, 'id': 3, 'description': 'Purge du conditionneur', 'criteria': '1 minute', 'duration': 5},
+        {'number': 4, 'id': 4, 'description': 'Contrôler câble', 'criteria': "Pas d'usure", 'duration': 7},
+        {'number': 5, 'id': 5, 'description': 'Mobilité roulements', 'criteria': 'Aucun bruit', 'duration': 6},
+        {'number': 6, 'id': 6, 'description': 'Usure courroies', 'criteria': "Pas d'usure", 'duration': 8},
+        {'number': 7, 'id': 7, 'description': 'Nettoyage roue encodeur', 'criteria': 'Aucune bavure', 'duration': 5},
+        {'number': 8, 'id': 8, 'description': 'Mobilité pinces', 'criteria': 'Aucun coincement', 'duration': 7},
+        {'number': 9, 'id': 9, 'description': 'État des couteaux', 'criteria': "Pas d'usure", 'duration': 6},
+        {'number': 10, 'id': 10, 'description': 'Tension courroie', 'criteria': '0,35 mm', 'duration': 8},
+        {'number': 11, 'id': 11, 'description': 'Ventilateur coffret', 'criteria': 'Fonctionnel', 'duration': 5},
+        {'number': 12, 'id': 12, 'description': 'Position bras pivotement', 'criteria': 'Alignement correct', 'duration': 7},
+        {'number': 13, 'id': 13, 'description': 'Pression manomètre', 'criteria': 'Valeurs normales', 'duration': 6},
+        {'number': 15, 'id': 15, 'description': 'Étalonnage presses', 'criteria': 'Cycle complet', 'duration': 15},
+        {'number': 16, 'id': 16, 'description': 'Paramètres TOP WIN', 'criteria': 'Désactivé', 'duration': 10},
+        {'number': 17, 'id': 17, 'description': 'Air comprimé', 'criteria': 'Air sec uniquement', 'duration': 5},
+        {'number': 18, 'id': 18, 'description': 'Mouvement redressement', 'criteria': 'Facile', 'duration': 8},
+        {'number': 19, 'id': 19, 'description': 'Réglage unité dressage', 'criteria': 'Correct', 'duration': 10},
+        {'number': 20, 'id': 20, 'description': 'Déplacement bras', 'criteria': 'Facile', 'duration': 7},
+        {'number': 21, 'id': 21, 'description': 'Griffes de serrage', 'criteria': 'Fixe', 'duration': 6},
+        {'number': 22, 'id': 22, 'description': 'Vérification longueur', 'criteria': 'Tolérance ±4mm', 'duration': 8},
+        {'number': 23, 'id': 23, 'description': "Niveau d'huile", 'criteria': 'Entre min et max', 'duration': 5},
+        {'number': 24, 'id': 24, 'description': 'Lubrification bras', 'criteria': 'Bon état', 'duration': 7},
+        {'number': 25, 'id': 25, 'description': 'État coupe bande', 'criteria': 'Fonctionnel', 'duration': 6},
+        {'number': 26, 'id': 26, 'description': 'Nettoyage crémaillère', 'criteria': 'Bon état', 'duration': 8},
+        {'number': 27, 'id': 27, 'description': 'Appareils pose bouchons', 'criteria': 'Bon état', 'duration': 7},
+        {'number': 28, 'id': 28, 'description': 'Bloc entraînement câble', 'criteria': 'Fonctionnel', 'duration': 8},
+        {'number': 29, 'id': 29, 'description': 'Roulements rouleaux', 'criteria': 'Alignement OK', 'duration': 6},
+    ]
+    
+    if request.method == 'GET':
+        return render_template(
+            'preventive_maintenance/monthly_tasks.html',
+            machines=machines,
+            tasks=tasks,
+            current_user=user
+        )
+
+# ============================================
+# SEMI-ANNUAL PREVENTIVE SYSTEMATIC MAINTENANCE
+# ============================================
+
+@preventive_bp.route('/semi-annual', methods=['GET', 'POST'])
+@login_required
+def semi_annual_preventive():
+    """Semi-annual preventive systematic maintenance report"""
+    user = User.query.get(session['user_id'])
+    machines = Machine.query.filter_by(status='active').all()
+    
+    # Original hardcoded semi-annual tasks (30-35)
+    tasks = [
+        {'number': 30, 'id': 30, 'description': 'Nettoyage armoire électrique', 'criteria': 'Propre', 'duration': 20},
+        {'number': 31, 'id': 31, 'description': 'Étalonnage presses', 'criteria': 'Cycle complet', 'duration': 30},
+        {'number': 32, 'id': 32, 'description': 'Graissage capot', 'criteria': 'Mouvement facile', 'duration': 15},
+        {'number': 33, 'id': 33, 'description': 'Contrôle corrosion', 'criteria': 'Aucune fuite', 'duration': 12},
+        {'number': 34, 'id': 34, 'description': 'Bandes transporteuses', 'criteria': 'Bon état', 'duration': 25},
+        {'number': 35, 'id': 35, 'description': 'Station seal', 'criteria': 'Fonctionnelle', 'duration': 20},
+    ]
+    
+    if request.method == 'GET':
+        return render_template(
+            'preventive_maintenance/semi_annual_tasks.html',
+            machines=machines,
+            tasks=tasks,
+            current_user=user
+        )

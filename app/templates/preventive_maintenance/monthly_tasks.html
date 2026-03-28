@@ -366,7 +366,7 @@
         </h2>
         <div class="task-stats">
             <i class="bi bi-hourglass-split"></i>
-            Estimated Total Duration: {{ (tasks|map(attribute='estimated_time')|sum) }} minutes
+            Estimated Total Duration: {{ (tasks|map(attribute='duration')|sum) }} minutes
         </div>
     </div>
 
@@ -393,31 +393,43 @@
                     </tr>
                 </thead>
                 <tbody id="monthlyTableBody">
-                    {% for task in tasks %}
-                    <tr class="task-row" data-task-id="{{ task.id }}">
-                        <td class="task-number">{{ task.number }}</td>
-                        <td>{{ task.description }}</td>
-                        <td><small>{{ task.criteria }}</small></td>
-                        <td style="text-align: center;">
-                            <select name="task_{{ task.id }}_status" class="status-select task-status">
-                                <option value="-">-</option>
-                                <option value="OK">OK</option>
-                                <option value="NOK">NOK</option>
-                            </select>
-                        </td>
-                        <td style="text-align: center;">
-                            <div class="task-timer-container">
-                                <button type="button" class="timer-button timer-start" id="start_task_{{ task.id }}" onclick="startTimer({{ task.id }}); return false;">Start</button>
-                                <button type="button" class="timer-button timer-stop" id="stop_task_{{ task.id }}" onclick="stopTimer({{ task.id }}); return false;" disabled>Stop</button>
-                                <div class="timer-display" id="display_task_{{ task.id }}" title="Click to edit duration" onclick="editDuration({{ task.id }})">0m</div>
-                                <input type="hidden" id="time_task_{{ task.id }}" name="task_{{ task.id }}_time" value="0">
-                            </div>
-                        </td>
-                        <td>
-                            <textarea name="task_{{ task.id }}_remarks" class="form-control form-control-sm remarks-input"></textarea>
+                    {% if tasks|length > 0 %}
+                        {% for task in tasks %}
+                        <tr class="task-row" data-task-id="{{ task.id }}">
+                            <td class="task-number">{{ task.number }}</td>
+                            <td>{{ task.description }}</td>
+                            <td><small>{{ task.criteria }}</small></td>
+                            <td style="text-align: center;">
+                                <select name="task_{{ task.id }}_status" class="status-select task-status">
+                                    <option value="-">-</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NOK">NOK</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="task-timer-container">
+                                    <button type="button" class="timer-button timer-start" id="start_task_{{ task.id }}" onclick="startTimer({{ task.id }}); return false;">Start</button>
+                                    <button type="button" class="timer-button timer-stop" id="stop_task_{{ task.id }}" onclick="stopTimer({{ task.id }}); return false;" disabled>Stop</button>
+                                    <div class="timer-display" id="display_task_{{ task.id }}" title="Click to edit duration" onclick="editDuration({{ task.id }})">0m</div>
+                                    <input type="hidden" id="time_task_{{ task.id }}" name="task_{{ task.id }}_time" value="0">
+                                </div>
+                            </td>
+                            <td>
+                                <textarea name="task_{{ task.id }}_remarks" class="form-control form-control-sm remarks-input"></textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                            <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
+                            <strong>No monthly preventive maintenance plans found</strong>
+                            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                Please create monthly preventive maintenance plans first.
+                            </p>
                         </td>
                     </tr>
-                    {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from app.models import db, Material, Machine, MaintenanceSchedule, SparePartsDemand, StockAlert, User, MaterialReturn, Zone, MaintenanceReport, StockMovement, PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, MachineStatus
 from app.routes.auth import login_required, role_required
 from app.email_service import EmailService
@@ -673,6 +673,224 @@ def preventive_reports_view():
         executions=executions,
         corrective_reports=corrective_reports,
         current_user=user
+    )
+
+
+@main_bp.route('/new-maintenance-report', methods=['GET'])
+@login_required
+@role_required('admin', 'supervisor', 'technician')
+def new_maintenance_report_wizard():
+    """Wizard for creating a new maintenance report - Zone → Machine → Category → Type"""
+    zones = Zone.query.all()
+    return render_template(
+        'new_report_wizard.html',
+        zones=zones,
+        current_user=User.query.get(session['user_id'])
+    )
+
+
+@main_bp.route('/api/machines-by-zone/<int:zone_id>', methods=['GET'])
+@login_required
+def get_machines_by_zone(zone_id):
+    """API endpoint to fetch machines by zone"""
+    try:
+        machines = Machine.query.filter_by(zone_id=zone_id, status='active').all()
+        logger.info(f"Fetching machines for zone {zone_id}: Found {len(machines)} active machines")
+        response = [
+            {
+                'id': m.id,
+                'name': m.name,
+                'code': m.machine_code
+            }
+            for m in machines
+        ]
+        return jsonify(response), 200
+    except Exception as e:
+        logger.error(f"Error fetching machines for zone {zone_id}: {str(e)}")
+        return jsonify({'error': 'Failed to load machines'}), 500
+
+
+@main_bp.route('/corrective-maintenance-tasks', methods=['GET', 'POST'])
+@login_required
+def corrective_maintenance_tasks():
+    """Display corrective maintenance tasks with form interface or handle form submission"""
+    user = User.query.get(session['user_id'])
+    
+    # Handle POST request (form submission)
+    if request.method == 'POST':
+        try:
+            logger.info("=" * 80)
+            logger.info("CORRECTIVE MAINTENANCE REPORT SAVE PROCESS STARTED")
+            logger.info("=" * 80)
+            
+            execution_date = request.form.get('executionDate')
+            
+            # Get selected machines from form (can be multiple)
+            import json as json_module
+            selected_machines_json = request.form.get('selected_machines', '[]')
+            try:
+                selected_machine_ids = json_module.loads(selected_machines_json)
+            except:
+                selected_machine_ids = []
+            
+            # Fallback to single machineSelect if multiple not found
+            if not selected_machine_ids:
+                single_machine_id = request.form.get('machineSelect')
+                if single_machine_id:
+                    selected_machine_ids = [int(single_machine_id)]
+            
+            if not selected_machine_ids:
+                logger.warning("No machines selected for corrective maintenance report")
+                flash('Please select at least one machine', 'warning')
+                return redirect(url_for('main.corrective_maintenance_tasks'))
+            
+            logger.info(f"Processing corrective maintenance report for {len(selected_machine_ids)} machine(s), Date: {execution_date}")
+            
+            # Collect task data once (will apply to all machines)
+            import json
+            task_data = {}
+            for item in CORRECTIVE_MAINTENANCE_ITEMS:
+                task_id = item['id']
+                status_key = f'task_{task_id}_status'
+                time_key = f'task_{task_id}_time'
+                remarks_key = f'task_{task_id}_remarks'
+                
+                status = request.form.get(status_key, '-')
+                duration = request.form.get(time_key, '0')
+                remarks = request.form.get(remarks_key, '')
+                
+                # Only save if task was touched (status changed or remarks added)
+                if status != '-' or remarks:
+                    task_data[f'task_{task_id}'] = {
+                        'name': item['name'],
+                        'category': item['category'],
+                        'status': status,
+                        'duration': int(duration),
+                        'remarks': remarks
+                    }
+            
+            task_count = len(task_data)
+            logger.info(f"Collected data from {task_count} corrective tasks")
+            
+            # Create a report for each selected machine
+            reports_created = []
+            for machine_id in selected_machine_ids:
+                # Create new maintenance report
+                report = MaintenanceReport()
+                report.technician_id = user.id
+                report.report_type = 'corrective'
+                report.report_status = 'submitted'
+                report.created_at = datetime.utcnow()
+                report.actual_end_time = datetime.utcnow()
+                report.updated_at = datetime.utcnow()
+                
+                # Get machine info
+                machine = Machine.query.get(int(machine_id))
+                if machine:
+                    report.machine_name = machine.name
+                    report.machine_id = machine.id
+                    logger.info(f"Machine assigned: {machine.name} (ID: {machine.id})")
+                
+                # Save checklist data as JSON
+                report.checklist_data = json.dumps(task_data)
+                
+                # Save to database
+                db.session.add(report)
+                db.session.flush()
+                reports_created.append(report.id)
+                
+                logger.info(f"✓ Report created for machine {machine.name} - Report ID: {report.id}")
+            
+            # Commit all reports
+            db.session.commit()
+            logger.info(f"✓ {len(reports_created)} Corrective Maintenance Report(s) SAVED")
+            
+            # Send emails to supervisor for each report
+            supervisor = user.supervisor
+            if supervisor and supervisor.email:
+                logger.info(f"Attempting to send emails to supervisor: {supervisor.full_name} ({supervisor.email})")
+                
+                for report_id in reports_created:
+                    report = MaintenanceReport.query.get(report_id)
+                    try:
+                        # Generate PDF HTML
+                        pdf_html = render_template(
+                            'maintenance_report_card.html',
+                            report=report,
+                            current_user=user
+                        )
+                        
+                        logger.info("PDF HTML template rendered successfully")
+                        
+                        # Send report to supervisor
+                        email_sent = EmailService.send_maintenance_report_to_supervisor(
+                            report=report,
+                            supervisor=supervisor,
+                            pdf_html=pdf_html,
+                            report_type='corrective'
+                        )
+                        
+                        if email_sent:
+                            logger.info(f"✓ Email SENT to supervisor for Report ID: {report_id}")
+                        else:
+                            logger.warning(f"Email sending returned False for Report ID: {report_id}")
+                            
+                    except Exception as email_error:
+                        logger.error(f"✗ Failed to send email for Report ID {report_id}: {type(email_error).__name__}: {str(email_error)}")
+            else:
+                logger.warning(f"No supervisor found or supervisor has no email")
+            
+            logger.info("=" * 80)
+            logger.info(f"CORRECTIVE MAINTENANCE REPORT SAVE PROCESS COMPLETED - {len(reports_created)} report(s) created")
+            logger.info("=" * 80)
+            
+            flash(f'Corrective maintenance report(s) saved for {len(selected_machine_ids)} machine(s) and sent to supervisor!', 'success')
+            return redirect(url_for('main.maintenance_reports_archive'))
+            
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error("CORRECTIVE MAINTENANCE REPORT SAVE PROCESS FAILED")
+            logger.error("=" * 80)
+            logger.error(f"✗ Error type: {type(e).__name__}")
+            logger.error(f"✗ Error message: {str(e)}")
+            logger.error("Full traceback:", exc_info=True)
+            
+            db.session.rollback()
+            flash(f'Error submitting corrective maintenance report: {str(e)}', 'danger')
+            return redirect(url_for('main.corrective_maintenance_tasks'))
+    
+    # Handle GET request (display form)
+    # Get active machines
+    machines = Machine.query.filter_by(status='active').all()
+    
+    # Get machine(s) from query parameters (passed from wizard)
+    machine_id_param = request.args.get('machine_id', type=int)
+    machine_ids_param = request.args.get('machine_ids', '')
+    
+    # Build list of selected machines
+    selected_machine_ids = []
+    if machine_id_param:
+        # Single machine from old wizard flow
+        selected_machine_ids = [machine_id_param]
+    elif machine_ids_param:
+        # Multiple machines from new wizard flow
+        try:
+            selected_machine_ids = [int(m_id) for m_id in machine_ids_param.split(',') if m_id.strip()]
+        except (ValueError, AttributeError):
+            selected_machine_ids = []
+    
+    # Get unique categories from corrective items
+    corrective_categories = sorted(list(set([item['category'] for item in CORRECTIVE_MAINTENANCE_ITEMS])))
+    
+    logger.info(f"User {user.full_name} viewing corrective maintenance tasks - {len(CORRECTIVE_MAINTENANCE_ITEMS)} items in {len(corrective_categories)} categories")
+    
+    return render_template(
+        'corrective_maintenance_tasks.html',
+        machines=machines,
+        corrective_items=CORRECTIVE_MAINTENANCE_ITEMS,
+        corrective_categories=corrective_categories,
+        current_user=user,
+        selected_machine_ids=selected_machine_ids
     )
 
 
