@@ -49,11 +49,11 @@
         <!-- Step 2: Select Machine(s) -->
         <div class="card border-0 shadow-sm mb-4" id="step2Card" style="display: none;">
             <div class="card-header bg-info">
-                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Step 2: Select Machine(s)</h5>
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Step 2: Select Machine</h5>
             </div>
             <div class="card-body p-4">
                 <small class="text-muted d-block mb-3">
-                    <i class="fas fa-info-circle"></i> Select one or more machines to perform maintenance on
+                    <i class="fas fa-info-circle"></i> Select a machine to perform maintenance on
                 </small>
                 <div id="machinesContainer"></div>
                 <div id="selectedMachinesDisplay" class="mt-3" style="display: none;">
@@ -294,8 +294,15 @@ function toggleMachine(machineId, machineName) {
         selectedMachineIds.delete(machineId);
         delete selectedMachineNames[machineId];
     } else {
+        // Clear previous selection and select only this machine
+        selectedMachineIds.clear();
+        selectedMachineNames = {};
         selectedMachineIds.add(machineId);
         selectedMachineNames[machineId] = machineName;
+        // Uncheck other checkboxes
+        document.querySelectorAll('.machine-checkbox').forEach(cb => {
+            cb.checked = (cb.value == machineId);
+        });
     }
     updateMachineDisplay();
 }

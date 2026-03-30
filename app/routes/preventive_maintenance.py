@@ -1004,7 +1004,7 @@ def download_preventive_report(execution_id):
 # MONTHLY PREVENTIVE SYSTEMATIC MAINTENANCE
 # ============================================
 
-@preventive_bp.route('/monthly', methods=['GET', 'POST'])
+@preventive_bp.route('/monthly', methods=['GET'])
 @login_required
 def monthly_preventive():
     """Monthly preventive systematic maintenance report"""
@@ -1055,7 +1055,7 @@ def monthly_preventive():
 # SEMI-ANNUAL PREVENTIVE SYSTEMATIC MAINTENANCE
 # ============================================
 
-@preventive_bp.route('/semi-annual', methods=['GET', 'POST'])
+@preventive_bp.route('/semi-annual', methods=['GET'])
 @login_required
 def semi_annual_preventive():
     """Semi-annual preventive systematic maintenance report"""

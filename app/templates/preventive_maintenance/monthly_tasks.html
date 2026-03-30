@@ -117,6 +117,14 @@
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 
+    .status-select:disabled {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
     .remarks-input {
         padding: 0.5rem;
         border: 1px solid #d1d5db;
@@ -470,8 +478,25 @@
 </div>
 
 <script>
+    // Auto-select machine from wizard if provided
+    function autoSelectMachine() {
+        const params = new URLSearchParams(window.location.search);
+        const machineIds = params.get('machine_ids');
+        if (machineIds) {
+            // Extract first machine ID if multiple are passed (should be single per our update)
+            const firstMachineId = machineIds.split(',')[0];
+            const machineSelect = document.getElementById('machineSelect');
+            if (machineSelect && firstMachineId) {
+                machineSelect.value = firstMachineId;
+            }
+        }
+    }
+
     // Set today's date as default
     document.getElementById('executionDate').valueAsDate = new Date();
+    
+    // Auto-select machine on page load
+    autoSelectMachine();
 
     // Filter functionality
     const monthlyFilterInput = document.getElementById('monthlyFilter');
@@ -512,18 +537,122 @@
         document.getElementById('pendingCount').textContent = rows.length - completedCount - nokCount;
     }
 
+    // Initialize sequential task validation
+    function initializeSequentialValidation() {
+        const taskRows = document.querySelectorAll('#monthlyTableBody tr.task-row');
+        
+        // Disable all dropdowns initially except the first
+        taskRows.forEach((row, index) => {
+            const select = row.querySelector('.task-status');
+            if (index === 0) {
+                select.disabled = false;
+            } else {
+                select.disabled = true;
+            }
+        });
+    }
+
+    // Enable next task when current is marked
+    function enableNextTask() {
+        const taskRows = document.querySelectorAll('#monthlyTableBody tr.task-row');
+        
+        taskRows.forEach((row, index) => {
+            const select = row.querySelector('.task-status');
+            const value = select.value;
+            
+            if (value !== '-') {
+                // Current task is marked, enable next task
+                if (index + 1 < taskRows.length) {
+                    const nextRow = taskRows[index + 1];
+                    const nextSelect = nextRow.querySelector('.task-status');
+                    nextSelect.disabled = false;
+                }
+            }
+        });
+    }
+
+    // Check if all visible tasks are marked
+    function areAllTasksMarked() {
+        const taskRows = document.querySelectorAll('#monthlyTableBody tr.task-row');
+        for (let row of taskRows) {
+            // Only check visible rows
+            if (row.style.display !== 'none') {
+                const select = row.querySelector('.task-status');
+                if (select.value === '-') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Check if all visible tasks have been timed (started and stopped)
+    function areAllTasksTimed() {
+        const taskRows = document.querySelectorAll('#monthlyTableBody tr.task-row');
+        for (let row of taskRows) {
+            // Only check visible rows
+            if (row.style.display !== 'none') {
+                const timeInput = row.querySelector('input[name*="_time"]');
+                if (!timeInput || parseInt(timeInput.value) < 1) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Check if all NOK tasks have remarks
+    function areAllNOKTasksRemarked() {
+        const taskRows = document.querySelectorAll('#monthlyTableBody tr.task-row');
+        for (let row of taskRows) {
+            // Only check visible rows
+            if (row.style.display !== 'none') {
+                const select = row.querySelector('.task-status');
+                if (select.value === 'NOK') {
+                    // This is a NOK task, check if it has a remark
+                    const textarea = row.querySelector('.remarks-input');
+                    if (!textarea || !textarea.value.trim()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     // Add event listeners to status selects
     document.querySelectorAll('.task-status').forEach(select => {
-        select.addEventListener('change', updateTaskCounts);
+        select.addEventListener('change', function() {
+            updateTaskCounts();
+            enableNextTask();
+        });
     });
 
-    // Form submission
+    // Form submission with validation
     document.getElementById('monthlyForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const machineSelect = document.getElementById('machineSelect').value;
         
         if (!machineSelect) {
             alert('Please select a machine');
+            return;
+        }
+
+        // Check if all visible tasks are marked
+        if (!areAllTasksMarked()) {
+            alert('Please mark all tasks with OK or NOK before submitting the report.');
+            return;
+        }
+
+        // Check if all visible tasks have been timed
+        if (!areAllTasksTimed()) {
+            alert('Please start and stop the timer for all tasks before submitting the report.');
+            return;
+        }
+
+        // Check if all NOK tasks have remarks
+        if (!areAllNOKTasksRemarked()) {
+            alert('Please provide a remark for all tasks marked as NOK before submitting the report.');
             return;
         }
 
@@ -537,6 +666,9 @@
         alert('Monthly preventive report submitted successfully!');
         this.submit();
     });
+
+    // Initialize validation on page load
+    initializeSequentialValidation();
 
     // ============================================
     // TIMER FUNCTIONALITY
@@ -648,11 +780,11 @@
         // Update display with final time (show minutes and seconds)
         if (minutes > 0) {
             display.textContent = `${minutes}m ${seconds}s`;
-            timeInput.value = minutes; // Store as minutes for form submission
         } else {
             display.textContent = `${seconds}s`;
-            timeInput.value = 0; // Less than 1 minute
         }
+        // Store total seconds in input for validation (must be at least 1 second)
+        timeInput.value = totalSeconds;
         display.classList.remove('running');
 
         // Hide both buttons after stopping
@@ -678,14 +810,20 @@
             stopTimer(taskId);
         }
 
-        // Prompt user for new duration
-        const currentValue = timeInput.value || '0';
-        const newDuration = prompt(`Enter duration in minutes (current: ${currentValue}m):`, currentValue);
+        // Get current value in seconds and display in user-friendly format
+        const currentSeconds = parseInt(timeInput.value) || 0;
+        const currentMinutes = Math.floor(currentSeconds / 60);
+        const currentSecs = currentSeconds % 60;
+        const displayText = currentMinutes > 0 ? `${currentMinutes}m ${currentSecs}s` : `${currentSecs}s`;
+        
+        // Prompt user for new duration in minutes
+        const newDuration = prompt(`Enter duration in minutes (current: ${displayText}):`, currentMinutes.toString());
 
         if (newDuration !== null) {
             const minutes = parseInt(newDuration) || 0;
-            timeInput.value = minutes;
-            display.textContent = `${minutes}m`;
+            const totalSeconds = minutes * 60;
+            timeInput.value = totalSeconds;
+            display.textContent = minutes > 0 ? `${minutes}m` : '0m';
         }
     };
 </script>
