@@ -656,6 +656,18 @@ def preventive_reports_view():
             if e.assigned_technician_id == user.id
         ]
     
+    # Get preventive maintenance reports (newly saved from monthly/semi-annual)
+    preventive_reports = MaintenanceReport.query.filter(
+        MaintenanceReport.report_type == 'preventive'
+    ).order_by(MaintenanceReport.created_at.desc()).all()
+    
+    # Filter preventive reports based on user role
+    if user.role == 'technician':
+        preventive_reports = [
+            r for r in preventive_reports 
+            if r.technician_id == user.id
+        ]
+    
     # Get corrective maintenance reports
     corrective_reports = MaintenanceReport.query.filter(
         MaintenanceReport.report_type.ilike('%corrective%')
@@ -671,6 +683,7 @@ def preventive_reports_view():
     return render_template(
         'preventive_reports_card_view.html',
         executions=executions,
+        preventive_reports=preventive_reports,
         corrective_reports=corrective_reports,
         current_user=user
     )
@@ -751,21 +764,28 @@ def corrective_maintenance_tasks():
             task_data = {}
             for item in CORRECTIVE_MAINTENANCE_ITEMS:
                 task_id = item['id']
-                status_key = f'task_{task_id}_status'
+                check_key = f'task_{task_id}_check'
                 time_key = f'task_{task_id}_time'
                 remarks_key = f'task_{task_id}_remarks'
                 
-                status = request.form.get(status_key, '-')
-                duration = request.form.get(time_key, '0')
-                remarks = request.form.get(remarks_key, '')
+                # Check if task was performed (checkbox)
+                is_checked = request.form.get(check_key) == '1'
+                duration_str = request.form.get(time_key, '0')
+                remarks = request.form.get(remarks_key, '').strip()
                 
-                # Only save if task was touched (status changed or remarks added)
-                if status != '-' or remarks:
+                # Convert duration to int, default to 0
+                try:
+                    duration = int(duration_str)
+                except (ValueError, TypeError):
+                    duration = 0
+                
+                # Only save if task was checked or has remarks
+                if is_checked or remarks:
                     task_data[f'task_{task_id}'] = {
                         'name': item['name'],
                         'category': item['category'],
-                        'status': status,
-                        'duration': int(duration),
+                        'checked': is_checked,
+                        'duration': duration,
                         'remarks': remarks
                     }
             
@@ -934,6 +954,43 @@ def maintenance_reports_archive():
         'maintenance_reports_archive.html',
         reports=reports,
         status_filter=status,
+        current_user=user
+    )
+
+
+@main_bp.route('/reports/<int:report_id>')
+@login_required
+def report_detail(report_id):
+    """Display detailed view of a maintenance report"""
+    report = MaintenanceReport.query.get_or_404(report_id)
+    user = User.query.get(session['user_id'])
+    
+    # Check authorization - allow technician, supervisor, or admin
+    if user.role not in ['admin', 'supervisor'] and report.technician_id != user.id:
+        flash('You are not authorized to view this report.', 'danger')
+        return redirect(url_for('main.maintenance_reports_archive'))
+    
+    # Parse checklist data if available
+    checklist_items = []
+    if report.checklist_data:
+        try:
+            import json
+            checklist_data = json.loads(report.checklist_data)
+            for key, value in checklist_data.items():
+                if isinstance(value, dict):
+                    checklist_items.append({
+                        'key': key,
+                        'status': value.get('status', '-'),
+                        'duration': value.get('duration', '0'),
+                        'remarks': value.get('remarks', '')
+                    })
+        except (json.JSONDecodeError, TypeError):
+            checklist_items = []
+    
+    return render_template(
+        'report_detail.html',
+        report=report,
+        checklist_items=checklist_items,
         current_user=user
     )
 

@@ -145,12 +145,142 @@
         <div class="col-12">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                No preventive maintenance reports found.
+                No preventive maintenance executions found.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Preventive Maintenance Reports (Monthly/Semi-Annual) -->
+        {% if preventive_reports %}
+            {% for report in preventive_reports %}
+            <div class="col-lg-4 col-md-6 mb-4 report-card" data-machine="{{ report.machine_name }}" data-technician="{{ report.technician.full_name if report.technician else '' }}">
+                <div class="card shadow-sm h-100 border-left border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-check"></i>
+                            {{ report.machine_name if report.machine_name else 'Unknown' }}
+                        </h5>
+                        <small>{{ report.work_description }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Status Badge -->
+                        <div class="mb-3">
+                            {% if report.report_status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% elif report.report_status == 'submitted' %}
+                                <span class="badge bg-warning">Submitted</span>
+                            {% elif report.report_status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ report.report_status }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Machine & Technician Info -->
+                        <div class="info-item mb-2">
+                            <label class="text-muted small fw-bold">Technician:</label>
+                            <p class="mb-0">{{ report.technician.full_name if report.technician else 'N/A' }}</p>
+                        </div>
+
+                        <!-- Date Info -->
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold">Created:</label>
+                                <p class="mb-0 small">{{ report.created_at.strftime('%Y-%m-%d') if report.created_at else 'N/A' }}</p>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold">Submitted:</label>
+                                <p class="mb-0 small">{{ report.actual_end_time.strftime('%Y-%m-%d') if report.actual_end_time else '--' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Report Type Info -->
+                        <div class="p-2 bg-light rounded">
+                            <label class="text-muted small fw-bold d-block mb-1">Report Type:</label>
+                            <p class="mb-0">{{ report.work_description }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light text-muted small">
+                        <i class="fas fa-clock"></i> Updated: {{ report.updated_at.strftime('%y-%m-%d %H:%M') if report.updated_at else 'N/A' }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Corrective Maintenance Reports -->
+        {% if corrective_reports %}
+            {% for report in corrective_reports %}
+            <div class="col-lg-4 col-md-6 mb-4 report-card" data-machine="{{ report.machine_name }}" data-technician="{{ report.technician.full_name if report.technician else '' }}">
+                <div class="card shadow-sm h-100 border-left border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools"></i>
+                            {{ report.machine_name if report.machine_name else 'Unknown' }}
+                        </h5>
+                        <small>Corrective Maintenance Report</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Status Badge -->
+                        <div class="mb-3">
+                            {% if report.report_status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% elif report.report_status == 'submitted' %}
+                                <span class="badge bg-warning">Submitted</span>
+                            {% elif report.report_status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ report.report_status }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Technician Info -->
+                        <div class="info-item mb-2">
+                            <label class="text-muted small fw-bold">Technician:</label>
+                            <p class="mb-0">{{ report.technician.full_name if report.technician else 'N/A' }}</p>
+                        </div>
+
+                        <!-- Date Info -->
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold">Created:</label>
+                                <p class="mb-0 small">{{ report.created_at.strftime('%Y-%m-%d') if report.created_at else 'N/A' }}</p>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold">Completed:</label>
+                                <p class="mb-0 small">{{ report.actual_end_time.strftime('%Y-%m-%d') if report.actual_end_time else '--' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Issues Found -->
+                        {% if report.issues_found %}
+                        <div class="alert alert-warning alert-sm mb-2 py-1 px-2">
+                            <small><strong>Issues Found</strong>: {{ report.issue_description if report.issue_description else 'See report for details' }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer bg-light text-muted small">
+                        <i class="fas fa-clock"></i> Updated: {{ report.updated_at.strftime('%y-%m-%d %H:%M') if report.updated_at else 'N/A' }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- No Reports Message -->
+        {% if not executions and not preventive_reports and not corrective_reports %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                No maintenance reports found.
             </div>
         </div>
         {% endif %}
     </div>
-
 
 </div>
 

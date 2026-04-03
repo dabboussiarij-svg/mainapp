@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .category-header {
-        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 8px;
@@ -15,12 +15,6 @@
     .category-header h2 {
         margin: 0;
         font-weight: 600;
-    }
-
-    .category-header .task-stats {
-        font-size: 0.95rem;
-        opacity: 0.95;
-        margin-top: 0.5rem;
     }
 
     .filter-section {
@@ -46,182 +40,89 @@
     .filter-input:focus {
         outline: none;
         background: #e5e7eb;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     .filter-icon {
-        color: #ef4444;
+        color: #3b82f6;
         font-size: 1.25rem;
     }
 
     .filter-count {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: #dbeafe;
+        color: #1e40af;
         padding: 0.5rem 0.75rem;
         border-radius: 4px;
         font-size: 0.9rem;
         font-weight: 500;
     }
 
-    .maintenance-table {
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    .category-section {
+        margin-bottom: 2rem;
     }
 
-    .maintenance-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .maintenance-table thead {
-        background: #f3f4f6;
-    }
-
-    .maintenance-table thead th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #ef4444;
-        border-bottom: 2px solid #f87171;
-    }
-
-    .maintenance-table tbody td {
+    .category-header-simple {
+        background-color: #f3f4f6;
         padding: 0.75rem 1rem;
+        border-left: 4px solid #3b82f6;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #1e3a8a;
+        border-radius: 4px;
+    }
+
+    .corrective-task-row {
         border-bottom: 1px solid #e5e7eb;
     }
 
-    .maintenance-table tbody tr:hover {
-        background: #f9fafb;
+    .corrective-task-row:hover {
+        background-color: #f9fafb;
     }
 
-    .task-number {
-        font-weight: 600;
-        color: #ef4444;
-        width: 60px;
-        text-align: center;
-    }
-
-    .task-category {
-        background: #fee2e2;
-        color: #991b1b;
-        padding: 0.25rem 0.5rem;
-        border-radius: 3px;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .status-select {
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        background: white;
-    }
-
-    .status-select:focus {
-        outline: none;
-        border-color: #ef4444;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-    }
-
-    .remarks-input {
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-family: inherit;
-        resize: vertical;
-        min-height: 40px;
-    }
-
-    .remarks-input:focus {
-        outline: none;
-        border-color: #ef4444;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-    }
-
-    .btn-action {
-        padding: 0.5rem 0.75rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.85rem;
+    .task-checkbox {
+        width: 20px;
+        height: 20px;
         cursor: pointer;
-        transition: all 0.2s ease;
+        accent-color: #3b82f6;
     }
 
-    .btn-action-start {
-        background: #ef4444;
-        color: white;
-    }
-
-    .btn-action-start:hover {
-        background: #dc2626;
-    }
-
-    .footer-stats {
-        background: #fef2f2;
-        border-top: 2px solid #ef4444;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 0 0 8px 8px;
-    }
-
-    .stat-item {
+    .task-time {
+        width: 80px;
         text-align: center;
     }
 
-    .stat-item .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #ef4444;
-    }
-
-    .stat-item .stat-label {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
+    .task-remarks {
+        resize: vertical;
+        font-size: 0.95rem;
     }
 
     .btn-submit {
-        width: 100%;
-        padding: 0.75rem;
-        background: #ef4444;
+        background: #10b981;
         color: white;
+        font-weight: 600;
         border: none;
         border-radius: 4px;
-        font-weight: 600;
         cursor: pointer;
-        font-size: 1rem;
+        padding: 0.75rem;
+        width: 100%;
         transition: all 0.2s ease;
     }
 
     .btn-submit:hover {
-        background: #dc2626;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        background: #059669;
     }
 
     .btn-cancel {
-        width: 100%;
-        padding: 0.75rem;
         background: #e5e7eb;
         color: #374151;
+        text-decoration: none;
+        font-weight: 600;
         border: none;
         border-radius: 4px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 1rem;
-        margin-top: 0.5rem;
+        padding: 0.75rem;
+        width: 100%;
+        text-align: center;
+        display: block;
         transition: all 0.2s ease;
     }
 
@@ -229,246 +130,135 @@
         background: #d1d5db;
     }
 
-    .no-results {
-        text-align: center;
-        padding: 2rem;
-        color: #6b7280;
+    .table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    .no-results-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-
-    .task-timer-container {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .timer-button {
-        padding: 0.4rem 0.8rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-weight: 500;
-    }
-
-    .timer-start {
-        background: #ef4444;
-        color: white;
-    }
-
-    .timer-start:hover:not(:disabled) {
-        background: #dc2626;
-        transform: translateY(-1px);
-    }
-
-    .timer-start:disabled {
-        background: #d1d5db;
-        color: #6b7280;
-        cursor: not-allowed;
-    }
-
-    .timer-stop {
-        background: #10b981;
-        color: white;
-    }
-
-    .timer-stop:hover:not(:disabled) {
-        background: #059669;
-        transform: translateY(-1px);
-    }
-
-    .timer-stop:disabled {
-        background: #d1d5db;
-        color: #6b7280;
-        cursor: not-allowed;
-    }
-
-    .timer-display {
-        min-width: 60px;
-        text-align: center;
+    .table thead th {
+        background-color: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 1rem;
+        text-align: left;
         font-weight: 600;
-        color: #ef4444;
-        padding: 0.4rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-control-sm {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
         border-radius: 4px;
-        background: #fef2f2;
-        cursor: pointer;
-        transition: background 0.2s ease;
+        font-size: 0.95rem;
     }
 
-    .timer-display:hover {
-        background: #fee2e2;
+    .form-control-sm:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    .timer-display.running {
-        animation: pulse 1s infinite;
-        background: #fee2e2;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-
-    input[type="date"]:read-only {
-        background-color: #f3f4f6;
-        cursor: not-allowed;
-        color: #6b7280;
-    }
-
-    input[type="date"]:read-only::-webkit-calendar-picker-indicator {
-        cursor: not-allowed;
+    .table-responsive {
+        overflow-x: auto;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-0">
-                        <i class="fas fa-tools"></i>
-                        Corrective Maintenance Report
-                    </h1>
-                    <p class="text-muted mt-2">Report issues, repairs and corrective actions</p>
-                </div>
-                <a href="{{ url_for('main.preventive_reports_view') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Reports
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Machine Selection -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <label class="form-label"><strong>Select Machine</strong></label>
-            <select id="machineSelect" class="form-select form-select-lg">
-                <option value="">-- Select a Machine --</option>
-                {% for machine in machines %}
-                <option value="{{ machine.id }}">
-                    {{ machine.machine_code }} - {{ machine.name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label"><strong>Execution Date</strong></label>
-            <input type="date" id="executionDate" class="form-control form-control-lg" required readonly>
-        </div>
-    </div>
-
-    <!-- Category Header -->
-    <div class="category-header">
-        <h2>
-            <i class="fas fa-wrench"></i>
-            Corrective Tasks ({{ corrective_items|length }} items)
+    <div class="category-header mb-4" style="margin: -1rem -1rem 2rem -1rem; padding: 1.5rem 1rem; border-radius: 0;">
+        <h2 style="margin: 0; font-size: 1.5rem;">
+            <i class="fas fa-tools"></i>
+            Corrective Maintenance
         </h2>
-        <div class="task-stats">
-            <i class="fas fa-hourglass-split"></i>
-            Please select the corrective tasks that need to be performed
-        </div>
     </div>
 
-    <!-- Filter Section -->
-    <div class="filter-section">
+    <!-- Display selected machines -->
+    {% if selected_machine_ids and selected_machine_ids|length > 0 %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        <strong>Selected Machine(s):</strong>
+        {% for machine_id in selected_machine_ids %}
+            {% for machine in machines %}
+                {% if machine.id == machine_id %}
+                    <span class="badge bg-info" style="margin-left: 0.5rem;">{{ machine.name }} ({{ machine.machine_code }})</span>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning mb-4">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>No machine selected.</strong> Please go back and select a machine first.
+    </div>
+    {% endif %}
+
+    <div class="filter-section mb-4">
         <i class="fas fa-search filter-icon"></i>
         <input type="text" id="correctiveFilter" class="filter-input" placeholder="Search for corrective task..."/>
         <span class="filter-count"><span id="correctiveTaskCount">{{ corrective_items|length }}</span> task(s)</span>
     </div>
 
-    <!-- Form Start -->
     <form id="correctiveForm" method="POST" action="{{ url_for('main.corrective_maintenance_tasks') }}">
-        <!-- Tasks Table -->
-        <div class="maintenance-table table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="task-number">N°</th>
-                        <th>Task Description</th>
-                        <th style="width: 120px; text-align: center;">Category</th>
-                        <th style="width: 100px; text-align: center;">Status</th>
-                        <th style="width: 120px; text-align: center;">Time (min)</th>
-                        <th style="width: 250px; text-align: center;">Remarks</th>
-                    </tr>
-                </thead>
-                <tbody id="correctiveTableBody">
-                    {% if corrective_items|length > 0 %}
-                        {% for task in corrective_items %}
-                        <tr class="task-row" data-task-id="{{ task.id }}" data-category="{{ task.category }}">
-                            <td class="task-number">{{ loop.index }}</td>
-                            <td>{{ task.name }}</td>
-                            <td style="text-align: center;"><span class="task-category">{{ task.category }}</span></td>
-                            <td style="text-align: center;">
-                                <select name="task_{{ task.id }}_status" class="status-select task-status">
-                                    <option value="-">-</option>
-                                    <option value="OK">OK</option>
-                                    <option value="NOK">NOK</option>
-                                </select>
-                            </td>
-                            <td style="text-align: center;">
-                                <div class="task-timer-container">
-                                    <button type="button" class="timer-button timer-start" id="start_task_{{ task.id }}" onclick="startTimer({{ task.id }}); return false;">Start</button>
-                                    <button type="button" class="timer-button timer-stop" id="stop_task_{{ task.id }}" onclick="stopTimer({{ task.id }}); return false;" disabled>Stop</button>
-                                    <div class="timer-display" id="display_task_{{ task.id }}" title="Click to edit duration" onclick="editDuration({{ task.id }})">0m</div>
-                                    <input type="hidden" id="time_task_{{ task.id }}" name="task_{{ task.id }}_time" value="0">
-                                </div>
-                            </td>
-                            <td>
-                                <textarea name="task_{{ task.id }}_remarks" class="form-control form-control-sm remarks-input"></textarea>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 3rem; color: #9ca3af;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
-                            <strong>No corrective maintenance tasks found</strong>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+        
+        <!-- Hidden field to store selected machine IDs as JSON -->
+        <input type="hidden" name="selected_machines" id="selectedMachinesInput" value='{{ selected_machine_ids|tojson }}'>
+        
+        {% set categories = corrective_items|map(attribute='category')|list|unique|sort %}
+        
+        {% for category in categories %}
+        <div class="category-section mb-5">
+            <div class="category-header-simple">
+                {{ category }}
+            </div>
 
-            <!-- Footer Stats -->
-            <div class="footer-stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="completedCount">0</div>
-                    <div class="stat-label">Completed</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="nokCount">0</div>
-                    <div class="stat-label">Issues Found</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="pendingCount">{{ corrective_items|length }}</div>
-                    <div class="stat-label">Pending</div>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-sm" style="border: 1px solid #e5e7eb; border-radius: 4px;">
+                    <thead>
+                        <tr style="background-color: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th style="width: 5%; text-align: center; padding: 1rem 0.5rem;">✓</th>
+                            <th style="padding: 1rem;">Tâche</th>
+                            <th style="width: 15%; text-align: center; padding: 1rem;">Temps (min)</th>
+                            <th style="width: 35%; padding: 1rem;">Remarques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in corrective_items %}
+                            {% if item.category == category %}
+                            <tr class="corrective-task-row" data-category="{{ category }}" data-search="{{ item.name|lower }} {{ item.id|lower }}" style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="text-align: center; padding: 1rem 0.5rem;">
+                                    <input type="checkbox" name="task_{{ item.id }}_check" value="1" class="form-check-input task-checkbox" style="width: 20px; height: 20px; cursor: pointer;">
+                                </td>
+                                <td style="padding: 1rem;">{{ item.name }}</td>
+                                <td style="text-align: center; padding: 1rem;">
+                                    <input type="number" name="task_{{ item.id }}_time" value="0" min="0" class="form-control form-control-sm task-time" style="width: 80px; margin: 0 auto; text-align: center;">
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <textarea name="task_{{ item.id }}_remarks" class="form-control form-control-sm task-remarks" rows="2" style="resize: vertical;"></textarea>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+        {% endfor %}
 
-        <!-- Hidden input to store category -->
         <input type="hidden" name="category" value="corrective">
 
-        <!-- Submit Buttons -->
-        <div class="row mt-4">
+        <div class="row mt-5">
             <div class="col-md-6">
                 <button type="submit" class="btn-submit">
-                    <i class="fas fa-check-lg"></i> Submit Corrective Report
+                    <i class="fas fa-check"></i> Submit Corrective Report
                 </button>
             </div>
             <div class="col-md-6">
                 <a href="{{ url_for('main.preventive_reports_view') }}" class="btn-cancel">
-                    <i class="fas fa-times-lg"></i> Cancel
+                    <i class="fas fa-times"></i> Cancel
                 </a>
             </div>
         </div>
@@ -476,292 +266,56 @@
 </div>
 
 <script>
-    // Set today's date as default
-    document.getElementById('executionDate').valueAsDate = new Date();
+    const correctiveFilterInput = document.getElementById('correctiveFilter');
+    if (correctiveFilterInput) {
+        correctiveFilterInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.corrective-task-row');
+            let visibleCount = 0;
 
-    // Machine selection handling - single machine mode
-    const machineSelect = document.getElementById('machineSelect');
-    
-    // Pre-select machine if passed from wizard
-    const preSelectedMachineIds = {{ selected_machine_ids | tojson }};
-    if (preSelectedMachineIds && preSelectedMachineIds.length > 0) {
-        machineSelect.value = preSelectedMachineIds[0];
+            rows.forEach(row => {
+                const searchData = row.dataset.search || '';
+                const isVisible = searchText === '' || searchData.includes(searchText);
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            document.getElementById('correctiveTaskCount').textContent = visibleCount;
+        });
     }
 
-    // Override form submission to validate machine selection
     document.getElementById('correctiveForm').addEventListener('submit', function(e) {
-        const machineId = machineSelect.value;
-        if (!machineId) {
+        // Validate that machines are selected
+        const selectedMachinesInput = document.getElementById('selectedMachinesInput');
+        let selectedMachines = [];
+        
+        if (selectedMachinesInput && selectedMachinesInput.value) {
+            try {
+                selectedMachines = JSON.parse(selectedMachinesInput.value);
+            } catch (err) {
+                console.error('Error parsing selected machines:', err);
+            }
+        }
+        
+        if (!selectedMachines || selectedMachines.length === 0) {
             e.preventDefault();
-            alert('Please select a machine before submitting.');
+            alert('⚠️ Please select at least one machine before submitting.\n\nGo back to the wizard and select a machine.');
             return false;
         }
-        // Add hidden input for selected machine
-        const machinesInput = document.createElement('input');
-        machinesInput.type = 'hidden';
-        machinesInput.name = 'selected_machines';
-        machinesInput.value = JSON.stringify([machineId]);
-        this.appendChild(machinesInput);
-    });
-
-    // Timer tracking for each task
-    const timers = {};
-
-    // Filter functionality
-    const correctiveFilterInput = document.getElementById('correctiveFilter');
-    correctiveFilterInput.addEventListener('keyup', function() {
-        const searchText = this.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#correctiveTableBody tr');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const taskText = row.textContent.toLowerCase();
-            const isVisible = searchText === '' || taskText.includes(searchText);
-            row.style.display = isVisible ? '' : 'none';
-            if (isVisible) {
-                visibleCount++;
-            }
+        
+        // Validate that at least one task is checked or has remarks
+        const hasAnyData = Array.from(document.querySelectorAll('.task-checkbox, .task-time, .task-remarks')).some(el => {
+            if (el.classList.contains('task-checkbox')) return el.checked;
+            return el.value !== '' && el.value !== '0';
         });
-
-        document.getElementById('correctiveTaskCount').textContent = visibleCount;
-    });
-
-    // Update task counts
-    function updateTaskCounts() {
-        const rows = document.querySelectorAll('#correctiveTableBody tr:not([style*="display: none"])');
-        let completedCount = 0;
-        let nokCount = 0;
-        let pendingCount = 0;
-
-        rows.forEach(row => {
-            const statusSelect = row.querySelector('.status-select');
-            if (statusSelect) {
-                const status = statusSelect.value;
-                if (status === 'OK') {
-                    completedCount++;
-                } else if (status === 'NOK') {
-                    nokCount++;
-                } else {
-                    pendingCount++;
-                }
-            }
-        });
-
-        document.getElementById('completedCount').textContent = completedCount;
-        document.getElementById('nokCount').textContent = nokCount;
-        document.getElementById('pendingCount').textContent = pendingCount;
-    }
-
-    // Set initial counts
-    updateTaskCounts();
-
-    // Update counts when status changes
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('status-select')) {
-            updateTaskCounts();
+        
+        if (!hasAnyData) {
+            e.preventDefault();
+            alert('⚠️ Please select at least one task or add remarks before submitting.');
+            return false;
         }
     });
-
-    // Timer functionality
-    function startTimer(taskId) {
-        const startBtn = document.getElementById(`start_task_${taskId}`);
-        const stopBtn = document.getElementById(`stop_task_${taskId}`);
-        const display = document.getElementById(`display_task_${taskId}`);
-
-        timers[taskId] = setInterval(() => {
-            const currentValue = parseInt(document.getElementById(`time_task_${taskId}`).value) || 0;
-            document.getElementById(`time_task_${taskId}`).value = currentValue + 1;
-            updateDisplay(taskId);
-        }, 60000); // 60 second intervals
-
-        display.classList.add('running');
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-    }
-
-    function stopTimer(taskId) {
-        if (timers[taskId]) {
-            clearInterval(timers[taskId]);
-            delete timers[taskId];
-        }
-
-        const startBtn = document.getElementById(`start_task_${taskId}`);
-        const stopBtn = document.getElementById(`stop_task_${taskId}`);
-        const display = document.getElementById(`display_task_${taskId}`);
-
-        display.classList.remove('running');
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-    }
-
-    function updateDisplay(taskId) {
-        const minutes = document.getElementById(`time_task_${taskId}`).value;
-        document.getElementById(`display_task_${taskId}`).textContent = minutes + 'm';
-    }
-
-    function editDuration(taskId) {
-        const currentValue = document.getElementById(`time_task_${taskId}`).value;
-        const newValue = prompt('Enter duration (in minutes):', currentValue);
-        if (newValue !== null && !isNaN(newValue)) {
-            document.getElementById(`time_task_${taskId}`).value = newValue;
-            updateDisplay(taskId);
-        }
-    }
-</script>
-                            <option value="">All Categories</option>
-                            {% for category in corrective_categories %}
-                                <option value="{{ category }}">{{ category }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold mb-2">
-                            <i class="fas fa-search"></i> Search Tasks
-                        </label>
-                        <input type="text" id="searchInput" class="form-control" 
-                               placeholder="Search by name or ID..." onkeyup="filterTasks()">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tasks Table -->
-    <div class="row mb-5">
-        <div class="col-md-12">
-            <div class="tasks-table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Task Name</th>
-                            <th>Category</th>
-                            <th style="text-align: center;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        {% for item in corrective_items %}
-                        <tr class="task-row" data-category="{{ item.category }}" data-search="{{ item.name | lower }} {{ item.id | lower }}">
-                            <td>
-                                <span class="task-id-badge">{{ item.id }}</span>
-                            </td>
-                            <td>
-                                <strong>{{ item.name }}</strong>
-                            </td>
-                            <td>
-                                {% if item.category == 'Mécanique' %}
-                                    <span class="category-badge category-mechanical">{{ item.category }}</span>
-                                {% elif item.category == 'Électrique' %}
-                                    <span class="category-badge category-electrical">{{ item.category }}</span>
-                                {% elif item.category == 'Informatique/Soft' %}
-                                    <span class="category-badge category-software">{{ item.category }}</span>
-                                {% elif item.category == 'Pneumatique' %}
-                                    <span class="category-badge category-pneumatic">{{ item.category }}</span>
-                                {% else %}
-                                    <span class="category-badge">{{ item.category }}</span>
-                                {% endif %}
-                            </td>
-                            <td style="text-align: center;">
-                                <button class="action-btn action-btn-primary" 
-                                        onclick="viewTaskDetails('{{ item.id }}', '{{ item.name }}', '{{ item.category }}')">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <div id="noResults" class="no-results-box" style="display: none;">
-                    <div class="no-results-icon">
-                        <i class="fas fa-inbox"></i>
-                    </div>
-                    <p class="no-results-text">No tasks found matching your search criteria.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Task Details Modal -->
-<div class="modal fade" id="taskDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4">
-            <div class="modal-header rounded-top-4" style="background: linear-gradient(135deg, #0d6efd 0%, #0756ca 100%); color: white; border: none;">
-                <h5 class="modal-title" id="modalTaskTitle">Task Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-muted">Task ID</label>
-                    <p id="modalId" class="h6 mb-0"></p>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-muted">Task Name</label>
-                    <p id="modalName" class="h6 mb-0"></p>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-muted">Category</label>
-                    <p id="modalCategory" class="h6 mb-0"></p>
-                </div>
-            </div>
-            <div class="modal-footer rounded-bottom-4" style="border-top: 1px solid #e9ecef;">
-                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary rounded-3" id="selectTaskBtn">
-                    <i class="fas fa-check"></i> Select Task
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function filterTasks() {
-    const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
-    const searchInput = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('.task-row');
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        const category = row.getAttribute('data-category').toLowerCase();
-        const searchText = row.getAttribute('data-search');
-
-        let categoryMatch = !categoryFilter || category === categoryFilter;
-        let searchMatch = !searchInput || searchText.includes(searchInput);
-
-        if (categoryMatch && searchMatch) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // Update counts
-    document.getElementById('visibleCount').textContent = visibleCount;
-    document.getElementById('filteredCount').textContent = visibleCount;
-
-    // Show/hide no results message
-    const noResults = document.getElementById('noResults');
-    if (visibleCount === 0) {
-        noResults.style.display = 'block';
-    } else {
-        noResults.style.display = 'none';
-    }
-}
-
-function viewTaskDetails(id, name, category) {
-    document.getElementById('modalId').textContent = id;
-    document.getElementById('modalName').textContent = name;
-    document.getElementById('modalCategory').textContent = category;
-    document.getElementById('modalTaskTitle').textContent = `${name}`;
-
-    const modal = new bootstrap.Modal(document.getElementById('taskDetailsModal'));
-    modal.show();
-
-    document.getElementById('selectTaskBtn').onclick = function() {
-        console.log('Task selected:', { id, name, category });
-        modal.hide();
-    };
-}
 </script>
 {% endblock %}

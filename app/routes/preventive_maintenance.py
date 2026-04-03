@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, make_response, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, make_response, send_file, current_app
 from app.models import (
     db, Machine, User, PreventiveMaintenancePlan, PreventiveMaintenanceTask,
-    PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, SparePartsDemand, Zone
+    PreventiveMaintenanceExecution, PreventiveMaintenanceTaskExecution, SparePartsDemand, Zone, MaintenanceReport
 )
 from app.routes.auth import login_required, role_required
 from app.email_service import EmailService
@@ -630,31 +630,92 @@ def archive():
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
     
-    query = PreventiveMaintenanceExecution.query.filter(
+    # Query PreventiveMaintenanceExecution records
+    execution_query = PreventiveMaintenanceExecution.query.filter(
         PreventiveMaintenanceExecution.status.in_(['completed', 'cancelled'])
     )
     
-    # Role-based filtering
+    # Query MaintenanceReport records with report_type='preventive'
+    report_query = MaintenanceReport.query.filter(
+        MaintenanceReport.report_type == 'preventive'
+    )
+    
+    # Role-based filtering for executions
     if user.role == 'technician':
-        query = query.filter_by(assigned_technician_id=user.id)
+        execution_query = execution_query.filter_by(assigned_technician_id=user.id)
+        report_query = report_query.filter_by(technician_id=user.id)
     elif user.role == 'supervisor':
-        query = query.filter_by(assigned_supervisor_id=user.id)
+        execution_query = execution_query.filter_by(assigned_supervisor_id=user.id)
     
     if machine_id:
-        query = query.filter_by(machine_id=machine_id)
+        execution_query = execution_query.filter_by(machine_id=machine_id)
+        report_query = report_query.filter(MaintenanceReport.machine_name.ilike(f'%{machine_id}%'))
     
     if start_date:
         start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
-        query = query.filter(PreventiveMaintenanceExecution.execution_date >= start_date_obj)
+        execution_query = execution_query.filter(PreventiveMaintenanceExecution.execution_date >= start_date_obj)
+        report_query = report_query.filter(MaintenanceReport.created_at >= start_date_obj)
     
     if end_date:
         end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
-        query = query.filter(PreventiveMaintenanceExecution.execution_date <= end_date_obj)
+        execution_query = execution_query.filter(PreventiveMaintenanceExecution.execution_date <= end_date_obj)
+        report_query = report_query.filter(MaintenanceReport.created_at <= end_date_obj)
     
-    archive = query.order_by(
+    # Get both executions and reports
+    executions = execution_query.order_by(
         PreventiveMaintenanceExecution.execution_date.desc()
-    ).paginate(page=page, per_page=20)
+    ).all()
     
+    reports = report_query.order_by(
+        MaintenanceReport.created_at.desc()
+    ).all()
+    
+    # Combine and sort by date
+    combined_items = []
+    for execution in executions:
+        combined_items.append({
+            'type': 'execution',
+            'date': execution.execution_date or execution.created_at,
+            'item': execution
+        })
+    
+    for report in reports:
+        combined_items.append({
+            'type': 'report',
+            'date': report.created_at,
+            'item': report
+        })
+    
+    # Sort by date descending
+    combined_items.sort(key=lambda x: x['date'], reverse=True)
+    
+    # Paginate the combined results
+    total = len(combined_items)
+    per_page = 20
+    start = (page - 1) * per_page
+    end = start + per_page
+    paged_items = combined_items[start:end]
+    
+    class SimplePager:
+        def __init__(self, items, page, per_page, total):
+            self.items = items
+            self.pages = (total + per_page - 1) // per_page
+            self.total = total
+            self.current_page = page
+        
+        def has_prev(self):
+            return self.current_page > 1
+        
+        def has_next(self):
+            return self.current_page < self.pages
+        
+        def prev_num(self):
+            return self.current_page - 1
+        
+        def next_num(self):
+            return self.current_page + 1
+    
+    archive = SimplePager(paged_items, page, per_page, total)
     machines = Machine.query.filter_by(status='active').all()
     
     return render_template(
@@ -1004,7 +1065,7 @@ def download_preventive_report(execution_id):
 # MONTHLY PREVENTIVE SYSTEMATIC MAINTENANCE
 # ============================================
 
-@preventive_bp.route('/monthly', methods=['GET'])
+@preventive_bp.route('/monthly', methods=['GET', 'POST'])
 @login_required
 def monthly_preventive():
     """Monthly preventive systematic maintenance report"""
@@ -1043,19 +1104,66 @@ def monthly_preventive():
         {'number': 29, 'id': 29, 'description': 'Roulements rouleaux', 'criteria': 'Alignement OK', 'duration': 6},
     ]
     
-    if request.method == 'GET':
-        return render_template(
-            'preventive_maintenance/monthly_tasks.html',
-            machines=machines,
-            tasks=tasks,
-            current_user=user
-        )
+    if request.method == 'POST':
+        try:
+            machine_id = request.form.get('machine_id')
+            machine = Machine.query.get(int(machine_id)) if machine_id else None
+            
+            # Create a new MaintenanceReport to store the preventive maintenance data
+            report = MaintenanceReport()
+            report.technician_id = user.id
+            report.machine_name = machine.name if machine else 'Unknown'
+            report.work_description = 'Monthly Preventive Systematic Maintenance'
+            report.report_type = 'preventive'  # Tag as preventive report
+            report.report_status = 'submitted'
+            report.created_at = datetime.utcnow()
+            report.actual_end_time = datetime.utcnow()
+            
+            # Store task data as JSON
+            task_data = {}
+            for task in tasks:
+                task_id = task['id']
+                status = request.form.get(f'task_{task_id}_status', '-')
+                duration = request.form.get(f'task_{task_id}_time', '0')
+                remarks = request.form.get(f'task_{task_id}_remarks', '')
+                
+                task_data[f'task_{task_id}'] = {
+                    'status': status,
+                    'duration': duration,
+                    'remarks': remarks
+                }
+            
+            report.checklist_data = json.dumps(task_data)
+            
+            db.session.add(report)
+            db.session.commit()
+            
+            flash('Monthly preventive maintenance report submitted successfully!', 'success')
+            return redirect(url_for('main.preventive_reports_view'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error submitting monthly preventive report: {str(e)}')
+            flash(f'Error submitting report: {str(e)}', 'danger')
+            return render_template(
+                'preventive_maintenance/monthly_tasks.html',
+                machines=machines,
+                tasks=tasks,
+                current_user=user
+            )
+    
+    # GET request
+    return render_template(
+        'preventive_maintenance/monthly_tasks.html',
+        machines=machines,
+        tasks=tasks,
+        current_user=user
+    )
 
 # ============================================
 # SEMI-ANNUAL PREVENTIVE SYSTEMATIC MAINTENANCE
 # ============================================
 
-@preventive_bp.route('/semi-annual', methods=['GET'])
+@preventive_bp.route('/semi-annual', methods=['GET', 'POST'])
 @login_required
 def semi_annual_preventive():
     """Semi-annual preventive systematic maintenance report"""
@@ -1072,10 +1180,57 @@ def semi_annual_preventive():
         {'number': 35, 'id': 35, 'description': 'Station seal', 'criteria': 'Fonctionnelle', 'duration': 20},
     ]
     
-    if request.method == 'GET':
-        return render_template(
-            'preventive_maintenance/semi_annual_tasks.html',
-            machines=machines,
-            tasks=tasks,
-            current_user=user
-        )
+    if request.method == 'POST':
+        try:
+            machine_id = request.form.get('machine_id')
+            machine = Machine.query.get(int(machine_id)) if machine_id else None
+            
+            # Create a new MaintenanceReport to store the preventive maintenance data
+            report = MaintenanceReport()
+            report.technician_id = user.id
+            report.machine_name = machine.name if machine else 'Unknown'
+            report.work_description = 'Semi-Annual Preventive Systematic Maintenance'
+            report.report_type = 'preventive'  # Tag as preventive report
+            report.report_status = 'submitted'
+            report.created_at = datetime.utcnow()
+            report.actual_end_time = datetime.utcnow()
+            
+            # Store task data as JSON
+            task_data = {}
+            for task in tasks:
+                task_id = task['id']
+                status = request.form.get(f'task_{task_id}_status', '-')
+                duration = request.form.get(f'task_{task_id}_time', '0')
+                remarks = request.form.get(f'task_{task_id}_remarks', '')
+                
+                task_data[f'task_{task_id}'] = {
+                    'status': status,
+                    'duration': duration,
+                    'remarks': remarks
+                }
+            
+            report.checklist_data = json.dumps(task_data)
+            
+            db.session.add(report)
+            db.session.commit()
+            
+            flash('Semi-annual preventive maintenance report submitted successfully!', 'success')
+            return redirect(url_for('main.preventive_reports_view'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error submitting semi-annual preventive report: {str(e)}')
+            flash(f'Error submitting report: {str(e)}', 'danger')
+            return render_template(
+                'preventive_maintenance/semi_annual_tasks.html',
+                machines=machines,
+                tasks=tasks,
+                current_user=user
+            )
+    
+    # GET request
+    return render_template(
+        'preventive_maintenance/semi_annual_tasks.html',
+        machines=machines,
+        tasks=tasks,
+        current_user=user
+    )
