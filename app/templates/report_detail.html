@@ -165,11 +165,7 @@
                                 {% for item in checklist_items %}
                                 <tr>
                                     <td>
-                                        {% if 'task_' in item.key %}
-                                            Task {{ item.key.replace('task_', '') }}
-                                        {% else %}
-                                            {{ item.key }}
-                                        {% endif %}
+                                        <strong>{{ item.description }}</strong>
                                     </td>
                                     <td>
                                         {% if item.status == 'ok' or item.status == 'completed' %}

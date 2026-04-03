@@ -1124,12 +1124,18 @@ def monthly_preventive():
             for task in tasks:
                 task_id = task['id']
                 status = request.form.get(f'task_{task_id}_status', '-')
-                duration = request.form.get(f'task_{task_id}_time', '0')
+                duration_input = request.form.get(f'task_{task_id}_time', '0')
+                # Convert to minutes (assuming input is in minutes)
+                try:
+                    duration_minutes = float(duration_input) if duration_input else 0
+                except (ValueError, TypeError):
+                    duration_minutes = 0
                 remarks = request.form.get(f'task_{task_id}_remarks', '')
                 
                 task_data[f'task_{task_id}'] = {
+                    'description': task.get('description', f'Task {task.get("number", task_id)}'),
                     'status': status,
-                    'duration': duration,
+                    'duration': str(duration_minutes),
                     'remarks': remarks
                 }
             
@@ -1231,12 +1237,18 @@ def semi_annual_preventive():
             for task in tasks:
                 task_id = task['id']
                 status = request.form.get(f'task_{task_id}_status', '-')
-                duration = request.form.get(f'task_{task_id}_time', '0')
+                duration_input = request.form.get(f'task_{task_id}_time', '0')
+                # Convert to minutes (assuming input is in minutes)
+                try:
+                    duration_minutes = float(duration_input) if duration_input else 0
+                except (ValueError, TypeError):
+                    duration_minutes = 0
                 remarks = request.form.get(f'task_{task_id}_remarks', '')
                 
                 task_data[f'task_{task_id}'] = {
+                    'description': task.get('description', f'Task {task.get("number", task_id)}'),
                     'status': status,
-                    'duration': duration,
+                    'duration': str(duration_minutes),
                     'remarks': remarks
                 }
             

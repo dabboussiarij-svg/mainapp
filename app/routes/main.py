@@ -965,10 +965,20 @@ def report_detail(report_id):
     report = MaintenanceReport.query.get_or_404(report_id)
     user = User.query.get(session['user_id'])
     
-    # Check authorization - allow technician, supervisor, or admin
-    if user.role not in ['admin', 'supervisor'] and report.technician_id != user.id:
+    # Check authorization
+    # Allow: admins (all reports), supervisors (reports from their technicians), technicians (their own reports)
+    is_authorized = False
+    
+    if user.role == 'admin':
+        is_authorized = True
+    elif user.role == 'supervisor' and report.technician and report.technician.supervisor_id == user.id:
+        is_authorized = True
+    elif report.technician_id == user.id:
+        is_authorized = True
+    
+    if not is_authorized:
         flash('You are not authorized to view this report.', 'danger')
-        return redirect(url_for('main.maintenance_reports_archive'))
+        return redirect(url_for('main.preventive_reports_view'))
     
     # Parse checklist data if available
     checklist_items = []
@@ -978,10 +988,23 @@ def report_detail(report_id):
             checklist_data = json.loads(report.checklist_data)
             for key, value in checklist_data.items():
                 if isinstance(value, dict):
+                    # Get duration and convert to minutes if needed
+                    duration = value.get('duration', '0')
+                    try:
+                        duration_float = float(duration)
+                        # If duration is > 60, it might be in seconds, convert to minutes
+                        if duration_float > 60:
+                            duration_minutes = round(duration_float / 60, 1)
+                        else:
+                            duration_minutes = duration_float
+                    except (ValueError, TypeError):
+                        duration_minutes = 0
+                    
                     checklist_items.append({
                         'key': key,
+                        'description': value.get('description', key),
                         'status': value.get('status', '-'),
-                        'duration': value.get('duration', '0'),
+                        'duration': str(duration_minutes),
                         'remarks': value.get('remarks', '')
                     })
         except (json.JSONDecodeError, TypeError):
@@ -991,6 +1014,38 @@ def report_detail(report_id):
         'report_detail.html',
         report=report,
         checklist_items=checklist_items,
+        current_user=user
+    )
+
+
+@main_bp.route('/pending-approvals')
+@login_required
+def pending_approvals():
+    """Display maintenance reports awaiting supervisor approval"""
+    user = User.query.get(session['user_id'])
+    page = request.args.get('page', 1, type=int)
+    
+    # Allow admins and supervisors to see pending reports for their subordinates
+    if user.role == 'supervisor':
+        # Show reports from technicians under this supervisor
+        pending_reports = MaintenanceReport.query.join(
+            User, MaintenanceReport.technician_id == User.id
+        ).filter(
+            User.supervisor_id == user.id,
+            MaintenanceReport.report_status == 'submitted'
+        ).order_by(MaintenanceReport.created_at.desc()).paginate(page=page, per_page=12)
+    elif user.role == 'admin':
+        # Show all pending reports
+        pending_reports = MaintenanceReport.query.filter(
+            MaintenanceReport.report_status == 'submitted'
+        ).order_by(MaintenanceReport.created_at.desc()).paginate(page=page, per_page=12)
+    else:
+        flash('You do not have permission to view pending approvals.', 'danger')
+        return redirect(url_for('main.preventive_reports_view'))
+    
+    return render_template(
+        'pending_approvals.html',
+        reports=pending_reports,
         current_user=user
     )
 
