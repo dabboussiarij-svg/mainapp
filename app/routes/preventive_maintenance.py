@@ -1138,7 +1138,38 @@ def monthly_preventive():
             db.session.add(report)
             db.session.commit()
             
-            flash('Monthly preventive maintenance report submitted successfully!', 'success')
+            # Send email notification to supervisor
+            try:
+                supervisor = None
+                if user.supervisor_id:
+                    supervisor = User.query.get(user.supervisor_id)
+                
+                if supervisor and supervisor.email:
+                    # Generate PDF-suitable HTML
+                    pdf_html = render_template(
+                        'maintenance_report_card.html',
+                        report=report,
+                        current_user=user
+                    )
+                    
+                    current_app.logger.info("PDF HTML template rendered successfully for monthly preventive report")
+                    
+                    # Send email with PDF to supervisor
+                    EmailService.send_maintenance_report_to_supervisor(
+                        report=report,
+                        supervisor=supervisor,
+                        pdf_html=pdf_html,
+                        report_type='preventive'
+                    )
+                    
+                    current_app.logger.info(f"✓ Email SENT to supervisor for Preventive Report ID: {report.id}")
+                else:
+                    current_app.logger.warning(f"No supervisor found or supervisor has no email for monthly preventive report {report.id}")
+            except Exception as email_error:
+                current_app.logger.error(f"✗ Failed to send email for monthly preventive report ID {report.id}: {type(email_error).__name__}: {str(email_error)}")
+                # Don't fail the report save if email fails
+            
+            flash('Monthly preventive maintenance report submitted successfully and sent to supervisor!', 'success')
             return redirect(url_for('main.preventive_reports_view'))
         except Exception as e:
             db.session.rollback()
@@ -1214,7 +1245,38 @@ def semi_annual_preventive():
             db.session.add(report)
             db.session.commit()
             
-            flash('Semi-annual preventive maintenance report submitted successfully!', 'success')
+            # Send email notification to supervisor
+            try:
+                supervisor = None
+                if user.supervisor_id:
+                    supervisor = User.query.get(user.supervisor_id)
+                
+                if supervisor and supervisor.email:
+                    # Generate PDF-suitable HTML
+                    pdf_html = render_template(
+                        'maintenance_report_card.html',
+                        report=report,
+                        current_user=user
+                    )
+                    
+                    current_app.logger.info("PDF HTML template rendered successfully for semi-annual preventive report")
+                    
+                    # Send email with PDF to supervisor
+                    EmailService.send_maintenance_report_to_supervisor(
+                        report=report,
+                        supervisor=supervisor,
+                        pdf_html=pdf_html,
+                        report_type='preventive'
+                    )
+                    
+                    current_app.logger.info(f"✓ Email SENT to supervisor for Preventive Report ID: {report.id}")
+                else:
+                    current_app.logger.warning(f"No supervisor found or supervisor has no email for semi-annual preventive report {report.id}")
+            except Exception as email_error:
+                current_app.logger.error(f"✗ Failed to send email for semi-annual preventive report ID {report.id}: {type(email_error).__name__}: {str(email_error)}")
+                # Don't fail the report save if email fails
+            
+            flash('Semi-annual preventive maintenance report submitted successfully and sent to supervisor!', 'success')
             return redirect(url_for('main.preventive_reports_view'))
         except Exception as e:
             db.session.rollback()
