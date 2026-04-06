@@ -12,7 +12,7 @@ import json
 preventive_bp = Blueprint('preventive', __name__, url_prefix='/preventive-maintenance')
 
 # ============================================
-# PREVENTIVE MAINTENANCE PLANS MANAGEMENT
+# preventive maintenance plans MANAGEMENT
 # ============================================
 
 @preventive_bp.route('/')

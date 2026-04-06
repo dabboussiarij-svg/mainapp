@@ -263,6 +263,9 @@ class MaintenanceReport(db.Model):
     # Checklist data (JSON format for flexibility)
     checklist_data = db.Column(db.Text)  # JSON string with checklist items and results
     
+    # Archive tracking
+    archive_date = db.Column(db.DateTime, nullable=True)  # When report was archived
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
