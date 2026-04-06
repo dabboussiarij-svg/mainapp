@@ -1067,6 +1067,7 @@ def download_preventive_report(execution_id):
 
 @preventive_bp.route('/monthly', methods=['GET', 'POST'])
 @login_required
+@role_required('technician')
 def monthly_preventive():
     """Monthly preventive systematic maintenance report"""
     user = User.query.get(session['user_id'])
@@ -1202,6 +1203,7 @@ def monthly_preventive():
 
 @preventive_bp.route('/semi-annual', methods=['GET', 'POST'])
 @login_required
+@role_required('technician')
 def semi_annual_preventive():
     """Semi-annual preventive systematic maintenance report"""
     user = User.query.get(session['user_id'])

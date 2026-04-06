@@ -395,7 +395,7 @@ CORRECTIVE_MAINTENANCE_ITEMS = [
 
 @main_bp.route('/maintenance-report', methods=['GET', 'POST'])
 @login_required
-@role_required('admin', 'supervisor', 'technician')
+@role_required('technician')
 def maintenance_report_card():
     """Display and handle the maintenance report card"""
     user = User.query.get(session['user_id'])
@@ -691,7 +691,7 @@ def preventive_reports_view():
 
 @main_bp.route('/new-maintenance-report', methods=['GET'])
 @login_required
-@role_required('admin', 'supervisor', 'technician')
+@role_required('technician')
 def new_maintenance_report_wizard():
     """Wizard for creating a new maintenance report - Zone → Machine → Category → Type"""
     zones = Zone.query.all()

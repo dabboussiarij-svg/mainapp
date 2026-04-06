@@ -144,7 +144,7 @@ def update_schedule_status(schedule_id, status):
 
 @maintenance_bp.route('/<int:schedule_id>/report-type', methods=['GET'])
 @login_required
-@role_required('technician', 'supervisor')
+@role_required('technician')
 def choose_report_type(schedule_id):
     """Let technician choose between standard and detailed report"""
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
@@ -152,7 +152,7 @@ def choose_report_type(schedule_id):
 
 @maintenance_bp.route('/<int:schedule_id>/report', methods=['GET', 'POST'])
 @login_required
-@role_required('technician', 'supervisor')
+@role_required('technician')
 def create_report(schedule_id):
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
     
