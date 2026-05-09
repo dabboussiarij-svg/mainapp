@@ -591,7 +591,7 @@ class PreventiveMaintenanceTaskExecution(db.Model):
     issues_encountered = db.Column(db.Text)  # Any issues or problems
     materials_used = db.Column(db.Text)  # Materials/parts used (can link to inventory)
     completion_notes = db.Column(db.Text)  # General notes
-    
+    # Maintenance Analytics
     # Quality/verification
     quality_check = db.Column(db.String(50), default='passed')  # passed, failed, not_applicable
     quality_notes = db.Column(db.Text)

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Spare Parts Inventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-search"></i> Browse Spare Parts Inventory</h2>
+            <p class="text-muted">Organized by machine and wear categories</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('stock.inventory') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-box2"></i> Full Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Selection Panel -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Select Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <!-- Step 1: Zone Selection -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Step 1: Select Zone *</label>
+                    <select name="zone_id" class="form-select" id="zoneSelect" required onchange="updateMachines()">
+                        <option value="">-- Choose a Zone --</option>
+                        {% for zone in zones %}
+                        <option value="{{ zone.id }}" {% if selected_zone_id == zone.id|string %}selected{% endif %}>
+                            {{ zone.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Step 2: Machine Selection -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Step 2: Select Machine *</label>
+                    <select name="machine_id" class="form-select" id="machineSelect" required>
+                        <option value="">-- Choose a Machine --</option>
+                        {% for machine in machines %}
+                        <option value="{{ machine.id }}" {% if selected_machine_id == machine.id|string %}selected{% endif %}>
+                            {{ machine.name }} ({{ machine.model or 'N/A' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Step 3: Spare Parts Type Selection -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Step 3: Select Parts Type *</label>
+                    <select name="type" class="form-select" required>
+                        <option value="">-- Choose Type --</option>
+                        <option value="specific" {% if selected_type == 'specific' %}selected{% endif %}>
+                            <i class="bi bi-gear"></i> Specific Spare Parts (Machine-specific)
+                        </option>
+                        <option value="standard" {% if selected_type == 'standard' %}selected{% endif %}>
+                            <i class="bi bi-box"></i> Standard Spare Parts (Universal)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search Parts
+                    </button>
+                    <a href="{{ url_for('stock.browse_spare_parts') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    {% if selected_zone_id and selected_machine_id and selected_type %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Showing <strong>{{ selected_type|capitalize }} Spare Parts</strong> for the selected machine
+                {% set zone = zones|selectattr('id', 'equalto', selected_zone_id|int)|first %}
+                {% set machine = machines|selectattr('id', 'equalto', selected_machine_id|int)|first %}
+                {% if zone %}<strong class="text-primary">{{ zone.name }}</strong>{% endif %}
+                {% if machine %}<strong class="text-primary">{{ machine.name }}</strong>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Spare Parts by Category -->
+    {% if sorted_categories %}
+        {% for category, parts in sorted_categories %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-tag"></i> {{ category }} ({{ parts|length }} items)
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="15%">Code</th>
+                            <th width="30%">Part Name</th>
+                            <th width="20%">Description</th>
+                            <th width="10%">Unit</th>
+                            <th width="12%">Stock Level</th>
+                            <th width="8%">Status</th>
+                            <th width="15%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for part in parts %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ part.code }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ part.name }}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ part.description[:50] if part.description else 'N/A' }}</small>
+                            </td>
+                            <td>{{ part.unit }}</td>
+                            <td>
+                                <strong>{{ part.current_stock }}</strong> / {{ part.max_stock }}
+                                <div class="progress" style="height: 5px;">
+                                    {% set percentage = (part.current_stock / part.max_stock * 100) if part.max_stock > 0 else 0 %}
+                                    {% if part.stock_status == 'critical' %}
+                                        <div class="progress-bar bg-danger" style="width: {{ percentage }}%"></div>
+                                    {% elif part.stock_status == 'warning' %}
+                                        <div class="progress-bar bg-warning" style="width: {{ percentage }}%"></div>
+                                    {% else %}
+                                        <div class="progress-bar bg-success" style="width: {{ percentage }}%"></div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if part.stock_status == 'critical' %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Critical</span>
+                                {% elif part.stock_status == 'warning' %}
+                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Warning</span>
+                                {% else %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('stock.material_detail', material_id=part.id) }}" class="btn btn-info" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if session.get('role') in ['admin', 'stock_agent', 'supervisor', 'technician'] %}
+                                    <a href="{{ url_for('demands.create', material_id=part.id) }}" class="btn btn-primary" title="Request Part">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% elif selected_zone_id and selected_machine_id and selected_type %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            No spare parts found for the selected criteria. Please check your selections or contact the warehouse.
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Please complete all three steps above to view spare parts organized by wear category.
+        </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Store machine data as JSON for client-side filtering
+const zonesMachineData = {
+    {% for zone in zones %}
+    '{{ zone.id }}': [
+        {% for machine in all_machines %}
+        {% if machine.zone_id == zone.id %}
+        { id: '{{ machine.id }}', name: '{{ machine.name }}', model: '{{ machine.model or "N/A" }}' },
+        {% endif %}
+        {% endfor %}
+    ],
+    {% endfor %}
+};
+
+function updateMachines() {
+    const zoneId = document.getElementById('zoneSelect').value;
+    const machineSelect = document.getElementById('machineSelect');
+    
+    // Clear existing options except first
+    machineSelect.innerHTML = '<option value="">-- Choose a Machine --</option>';
+    
+    if (!zoneId) return;
+    
+    // Add machines for selected zone
+    const machines = zonesMachineData[zoneId] || [];
+    machines.forEach(machine => {
+        const option = document.createElement('option');
+        option.value = machine.id;
+        option.textContent = machine.name + ' (' + machine.model + ')';
+        machineSelect.appendChild(option);
+    });
+}
+
+// Initialize machines on page load if zone is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedZone = document.getElementById('zoneSelect').value;
+    if (selectedZone) {
+        updateMachines();
+    }
+});
+</script>
+{% endblock %}
