@@ -1752,7 +1752,7 @@ def movement_history():
 @login_required
 def browse_spare_parts():
     """Browse spare parts by zone, machine, and type with wear category organization"""
-    from app.models import Zone, Machine
+    from app.models import Zone, Machine, Material
     
     zone_id = request.args.get('zone_id', '')
     machine_id = request.args.get('machine_id', '')
@@ -1764,37 +1764,75 @@ def browse_spare_parts():
     # Get ALL machines (for JavaScript filtering) and filtered machines for display
     all_machines = Machine.query.all()
     machines = []
+    selected_machine = None
     if zone_id:
         machines = Machine.query.filter_by(zone_id=zone_id).all()
+    
+    if machine_id:
+        try:
+            selected_machine = Machine.query.get(int(machine_id))
+        except:
+            selected_machine = None
     
     # Get spare parts based on criteria
     spare_parts_by_category = {}
     
     if machine_id and parts_type:
-        # Determine spare parts based on type and machine
-        # For now, we'll show all materials and categorize them
-        # This can be extended based on actual machine-part relationships
+        # Query materials with stock > 0 (available in stock)
+        query = Material.query.filter(Material.current_stock > 0).order_by(Material.category, Material.name)
         
-        machine = Machine.query.get(machine_id) if machine_id else None
-        query = Material.query
-        
-        # Filter by type (you may need to add a 'type' field to Material model)
-        # For now, we'll use category as a proxy
+        # Filter by type (specific vs standard)
+        # Specific parts: commonly used maintenance parts
+        # Standard parts: universal consumables
         if parts_type == 'specific':
-            # Machine-specific parts (could be filtered by machine_id in a junction table)
-            pass
+            # Machine-specific parts - filter by common machine maintenance categories
+            specific_categories = [
+                'Engine Parts', 'Hydraulic Components', 'Bearings', 'Seals',
+                'Belts & Chains', 'Motors', 'Sensors', 'Control Units',
+                'Valves', 'Pumps', 'Compressors', 'Drive Components',
+                'Mechanical Parts', 'Electrical Components', 'Pneumatic Components',
+                'Transmission', 'Gearbox', 'Coupling', 'Clutch', 'Brake',
+                'Filter', 'Heat Exchanger', 'Reservoir', 'Actuators'
+            ]
+            query = query.filter(Material.category.in_(specific_categories))
+            materials = query.all()
+            
+            # If no results with specific categories, show all materials with stock > 0
+            if not materials:
+                materials = Material.query.filter(Material.current_stock > 0).order_by(Material.category, Material.name).all()
+                
         elif parts_type == 'standard':
-            # Standard parts used across machines
-            pass
+            # Standard consumables and universal parts
+            standard_categories = [
+                'Lubricants', 'Coolants', 'Cleaning Supplies', 'Safety Equipment',
+                'Fasteners', 'Tools', 'Hoses', 'Cables', 'Fittings',
+                'Consumables', 'Standard Parts', 'Liquids', 'Adhesives',
+                'Solvents', 'Tape', 'Gaskets', 'Washers', 'Springs'
+            ]
+            query = query.filter(Material.category.in_(standard_categories))
+            materials = query.all()
+            
+            # If no results with standard categories, show all materials with stock > 0
+            if not materials:
+                materials = Material.query.filter(Material.current_stock > 0).order_by(Material.category, Material.name).all()
+        else:
+            # If type is not recognized, show all materials with stock > 0
+            materials = Material.query.filter(Material.current_stock > 0).order_by(Material.category, Material.name).all()
         
-        materials = query.all()
-        
-        # Organize by wear category (using the 'category' field)
+        # Organize by wear category
         for material in materials:
             category = material.category or 'Uncategorized'
             if category not in spare_parts_by_category:
                 spare_parts_by_category[category] = []
             spare_parts_by_category[category].append(material)
+        
+        logger.info(f"Browse Spare Parts: Zone={zone_id}, Machine={machine_id}, Type={parts_type}, Found {len(materials)} materials in {len(spare_parts_by_category)} categories")
+    
+    # Calculate statistics for display
+    total_items = sum(len(parts) for parts in spare_parts_by_category.values())
+    critical_count = sum(1 for parts in spare_parts_by_category.values() for part in parts if part.stock_status == 'critical')
+    normal_count = sum(1 for parts in spare_parts_by_category.values() for part in parts if part.stock_status == 'normal')
+    warning_count = sum(1 for parts in spare_parts_by_category.values() for part in parts if part.stock_status == 'warning')
     
     # Sort categories for display
     sorted_categories = sorted(spare_parts_by_category.items())
@@ -1804,11 +1842,17 @@ def browse_spare_parts():
         zones=zones,
         machines=machines,
         all_machines=all_machines,
+        selected_machine=selected_machine,
         selected_zone_id=zone_id,
         selected_machine_id=machine_id,
         selected_type=parts_type,
         spare_parts_by_category=spare_parts_by_category,
-        sorted_categories=sorted_categories
+        sorted_categories=sorted_categories,
+        stats_total_items=total_items,
+        stats_critical_count=critical_count,
+        stats_normal_count=normal_count,
+        stats_warning_count=warning_count,
+        stats_total_categories=len(spare_parts_by_category)
     )
 
 @stock_bp.route('/return-material', methods=['GET', 'POST'])

@@ -66,8 +66,11 @@
 
                 <!-- Submit Button -->
                 <div class="col-12">
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-info-circle"></i> Parts will display automatically when all selections are made
+                    </small>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Search Parts
+                        <i class="bi bi-search"></i> Search Parts (or Select to Auto-Load)
                     </button>
                     <a href="{{ url_for('stock.browse_spare_parts') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
@@ -83,14 +86,53 @@
         <div class="col-12">
             <div class="alert alert-info">
                 <i class="bi bi-info-circle"></i>
-                Showing <strong>{{ selected_type|capitalize }} Spare Parts</strong> for the selected machine
+                <strong>Selection:</strong> 
                 {% set zone = zones|selectattr('id', 'equalto', selected_zone_id|int)|first %}
                 {% set machine = machines|selectattr('id', 'equalto', selected_machine_id|int)|first %}
-                {% if zone %}<strong class="text-primary">{{ zone.name }}</strong>{% endif %}
-                {% if machine %}<strong class="text-primary">{{ machine.name }}</strong>{% endif %}
+                Zone: <span class="badge bg-primary">{{ zone.name if zone else 'N/A' }}</span>
+                Machine: <span class="badge bg-primary">{{ machine.name if machine else 'N/A' }}</span>
+                Type: <span class="badge bg-secondary">{{ selected_type|capitalize }} Parts</span>
             </div>
         </div>
     </div>
+
+    <!-- Statistics -->
+    {% if sorted_categories %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Categories</h5>
+                    <h2 class="text-primary">{{ stats_total_categories }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Items</h5>
+                    <h2 class="text-info">{{ stats_total_items }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Critical Stock</h5>
+                    <h2 class="text-danger">{{ stats_critical_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">In Stock</h5>
+                    <h2 class="text-success">{{ stats_normal_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Spare Parts by Category -->
     {% if sorted_categories %}
@@ -105,12 +147,12 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th width="15%">Code</th>
-                            <th width="30%">Part Name</th>
-                            <th width="20%">Description</th>
-                            <th width="10%">Unit</th>
-                            <th width="12%">Stock Level</th>
-                            <th width="8%">Status</th>
+                            <th width="12%">Code</th>
+                            <th width="25%">Part Name</th>
+                            <th width="18%">Description</th>
+                            <th width="8%">Unit</th>
+                            <th width="12%">Current Stock</th>
+                            <th width="10%">Status</th>
                             <th width="15%">Actions</th>
                         </tr>
                     </thead>
@@ -122,14 +164,17 @@
                             </td>
                             <td>
                                 <strong>{{ part.name }}</strong>
+                                {% if part.supplier %}
+                                <br><small class="text-muted">Supplier: {{ part.supplier }}</small>
+                                {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ part.description[:50] if part.description else 'N/A' }}</small>
+                                <small class="text-muted">{{ part.description[:50] if part.description else 'No description' }}</small>
                             </td>
-                            <td>{{ part.unit }}</td>
+                            <td>{{ part.unit or 'pcs' }}</td>
                             <td>
                                 <strong>{{ part.current_stock }}</strong> / {{ part.max_stock }}
-                                <div class="progress" style="height: 5px;">
+                                <div class="progress" style="height: 5px; margin-top: 3px;">
                                     {% set percentage = (part.current_stock / part.max_stock * 100) if part.max_stock > 0 else 0 %}
                                     {% if part.stock_status == 'critical' %}
                                         <div class="progress-bar bg-danger" style="width: {{ percentage }}%"></div>
@@ -144,7 +189,7 @@
                                 {% if part.stock_status == 'critical' %}
                                 <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Critical</span>
                                 {% elif part.stock_status == 'warning' %}
-                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Warning</span>
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Warning</span>
                                 {% else %}
                                 <span class="badge bg-success"><i class="bi bi-check-circle"></i> Normal</span>
                                 {% endif %}
@@ -152,11 +197,11 @@
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ url_for('stock.material_detail', material_id=part.id) }}" class="btn btn-info" title="View Details">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="bi bi-eye"></i> View
                                     </a>
                                     {% if session.get('role') in ['admin', 'stock_agent', 'supervisor', 'technician'] %}
-                                    <a href="{{ url_for('demands.create', material_id=part.id) }}" class="btn btn-primary" title="Request Part">
-                                        <i class="bi bi-cart-plus"></i>
+                                    <a href="{{ url_for('demands.create_demand', material_id=part.id) }}" class="btn btn-primary" title="Request Part">
+                                        <i class="bi bi-cart-plus"></i> Request
                                     </a>
                                     {% endif %}
                                 </div>
@@ -206,6 +251,7 @@ function updateMachines() {
     
     // Clear existing options except first
     machineSelect.innerHTML = '<option value="">-- Choose a Machine --</option>';
+    machineSelect.value = '';
     
     if (!zoneId) return;
     
@@ -217,11 +263,51 @@ function updateMachines() {
         option.textContent = machine.name + ' (' + machine.model + ')';
         machineSelect.appendChild(option);
     });
+    
+    // Auto-submit if all fields are filled
+    checkAndAutoSubmit();
 }
 
-// Initialize machines on page load if zone is already selected
+function checkAndAutoSubmit() {
+    const zoneId = document.getElementById('zoneSelect').value;
+    const machineId = document.getElementById('machineSelect').value;
+    const typeSelect = document.querySelector('select[name="type"]');
+    const typeValue = typeSelect ? typeSelect.value : '';
+    
+    // If all three selections are made, auto-submit the form
+    if (zoneId && machineId && typeValue) {
+        // Slight delay to ensure UI updates visually
+        setTimeout(() => {
+            document.querySelector('form').submit();
+        }, 300);
+    }
+}
+
+// Event listeners for auto-submit
 document.addEventListener('DOMContentLoaded', function() {
-    const selectedZone = document.getElementById('zoneSelect').value;
+    const zoneSelect = document.getElementById('zoneSelect');
+    const machineSelect = document.getElementById('machineSelect');
+    const typeSelect = document.querySelector('select[name="type"]');
+    
+    // Zone change event
+    zoneSelect.addEventListener('change', function() {
+        updateMachines();
+    });
+    
+    // Machine change event
+    machineSelect.addEventListener('change', function() {
+        checkAndAutoSubmit();
+    });
+    
+    // Type change event
+    if (typeSelect) {
+        typeSelect.addEventListener('change', function() {
+            checkAndAutoSubmit();
+        });
+    }
+    
+    // Initialize machines on page load if zone is already selected
+    const selectedZone = zoneSelect.value;
     if (selectedZone) {
         updateMachines();
     }
