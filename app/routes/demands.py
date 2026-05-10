@@ -1012,6 +1012,39 @@ def restore_archived_demand(demand_id):
     flash(f'Demand group {base} has been restored to active list.', 'success')
     return redirect(url_for('demands.detail', demand_id=demand_id))
 
+@demands_bp.route('/api/materials-for-machine/<int:machine_id>', methods=['GET'])
+@login_required
+def get_materials_for_machine(machine_id):
+    """
+    API endpoint to fetch materials suitable for a specific machine.
+    Returns JSON with material options filtered by machine category/type.
+    """
+    from flask import jsonify
+    
+    machine = Machine.query.get(machine_id)
+    if not machine:
+        return jsonify({'error': 'Machine not found'}), 404
+    
+    # For now, return all active materials since there's no direct Machine→Material relationship
+    # In production, you might filter by category, machine type, or a dedicated machine_materials table
+    materials = Material.query.filter_by(status='active').order_by(Material.name.asc()).all()
+    
+    materials_data = [
+        {
+            'id': m.id,
+            'name': m.name,
+            'code': m.code,
+            'category': m.category or 'Uncategorized',
+            'material_type': m.material_type or 'standard',
+            'unit': m.unit or 'PCS',
+            'current_stock': m.current_stock,
+        }
+        for m in materials
+    ]
+    
+    return jsonify({'materials': materials_data})
+
+
 @demands_bp.route('/admin/auto-archive', methods=['POST'])
 @login_required
 @role_required('admin')

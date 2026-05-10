@@ -63,6 +63,10 @@
                                 <h5 class="mb-0">Materials</h5>
                             </div>
                             <div class="card-body">
+                                <div id="materials-info-message" class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-info-circle"></i> <strong>Step 3:</strong> Please select Zone and Machine above first. Materials available for the selected machine will appear here.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
                                 <div id="materials-container">
                                     <div class="material-row mb-3">
                                         <div class="row g-3 align-items-end">
@@ -102,7 +106,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="addMaterialRow()">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addMaterialRow()" id="addMaterialBtn">
                                     <i class="bi bi-plus-circle"></i> Add Another Material
                                 </button>
                             </div>
@@ -122,7 +126,22 @@
 </div>
 
 <script>
-// Dynamic machine filtering based on zone selection
+// Store all materials globally for dynamic filtering
+let allMaterials = [
+    {% for material in materials %}
+    {
+        id: {{ material.id }},
+        name: '{{ material.name }}',
+        code: '{{ material.code }}',
+        category: '{{ material.category or "Uncategorized" }}',
+        material_type: '{{ material.material_type or "standard" }}',
+        unit: '{{ material.unit or "PCS" }}',
+        current_stock: {{ material.current_stock }}
+    },
+    {% endfor %}
+];
+
+// Dynamic machine filtering based on zone selection and load materials
 function updateMachines() {
     const zoneSelect = document.getElementById('zoneSelect');
     const machineSelect = document.getElementById('machineSelect');
@@ -136,6 +155,9 @@ function updateMachines() {
     
     if (!selectedZoneId) {
         machineSelect.disabled = true;
+        // Disable materials when no zone selected
+        document.getElementById('materials-container').style.opacity = '0.5';
+        document.getElementById('materials-container').style.pointerEvents = 'none';
         return;
     }
 
@@ -148,6 +170,9 @@ function updateMachines() {
     if (zoneOptions.length === 0) {
         machineSelect.innerHTML = '<option value="">No machines in this zone</option>';
         machineSelect.disabled = true;
+        // Disable materials when no machines available
+        document.getElementById('materials-container').style.opacity = '0.5';
+        document.getElementById('materials-container').style.pointerEvents = 'none';
         return;
     }
 
@@ -159,7 +184,30 @@ function updateMachines() {
     });
 
     machineSelect.disabled = false;
+    // Reset machine selection when zone changes
+    machineSelect.value = '';
+    // Disable materials until machine is selected
+    document.getElementById('materials-container').style.opacity = '0.5';
+    document.getElementById('materials-container').style.pointerEvents = 'none';
 }
+
+// Load materials when machine is selected
+function onMachineSelected() {
+    const machineSelect = document.getElementById('machineSelect');
+    const selectedMachineId = machineSelect.value;
+    
+    // Enable materials section
+    if (selectedMachineId) {
+        document.getElementById('materials-container').style.opacity = '1';
+        document.getElementById('materials-container').style.pointerEvents = 'auto';
+    } else {
+        document.getElementById('materials-container').style.opacity = '0.5';
+        document.getElementById('materials-container').style.pointerEvents = 'none';
+    }
+}
+
+// Attach machine selection change listener
+document.getElementById('machineSelect').addEventListener('change', onMachineSelected);
 
 function updateRowAvailable(row) {
     const select = row.querySelector('.material-select');
@@ -184,32 +232,38 @@ function validateRow(row) {
     const select = row.querySelector('.material-select');
     const qtyInput = row.querySelector('.quantity-input');
     const typeSelect = row.querySelector('.material-type-select');
+    const zoneSelect = document.getElementById('zoneSelect');
+    const machineSelect = document.getElementById('machineSelect');
     const available = parseInt(select.options[select.selectedIndex]?.dataset.available || '0', 10);
 
-    if (!select.value) {
-        qtyInput.setCustomValidity('Please select a material.');
+    // Check zone and machine selection first
+    if (!zoneSelect.value) {
+        select.setCustomValidity('Please select a Zone first.');
         return false;
-    }
-
-    if (!typeSelect.value) {
+    } else if (!machineSelect.value) {
+        select.setCustomValidity('Please select a Machine first.');
+        return false;
+    } else if (!select.value) {
+        select.setCustomValidity('Please select a material.');
+        return false;
+    } else if (!typeSelect.value) {
         typeSelect.setCustomValidity('Please select a material type (Specific or Standard).');
         return false;
-    } else {
-        typeSelect.setCustomValidity('');
-    }
-
-    if (isNaN(available)) {
+    } else if (isNaN(available)) {
         qtyInput.setCustomValidity('Unable to determine available stock.');
         return false;
+    } else {
+        const qty = parseInt(qtyInput.value, 10);
+        if (qty > available) {
+            qtyInput.setCustomValidity(`Requested quantity (${qty}) exceeds available stock (${available}).`);
+            return false;
+        }
+        // Clear validation messages
+        select.setCustomValidity('');
+        typeSelect.setCustomValidity('');
+        qtyInput.setCustomValidity('');
     }
-
-    const qty = parseInt(qtyInput.value, 10);
-    if (qty > available) {
-        qtyInput.setCustomValidity(`Requested quantity (${qty}) exceeds available stock (${available}).`);
-        return false;
-    }
-
-    qtyInput.setCustomValidity('');
+    
     return true;
 }
 
@@ -270,8 +324,9 @@ function filterMaterialsByType(typeSelectElement) {
 function addMaterialRow() {
     const container = document.getElementById('materials-container');
     const newRow = document.querySelector('.material-row').cloneNode(true);
-    newRow.querySelector('select').value = '';
-    newRow.querySelector('input').value = '1';
+    newRow.querySelector('.material-type-select').value = '';
+    newRow.querySelector('.material-select').value = '';
+    newRow.querySelector('.quantity-input').value = '1';
     container.appendChild(newRow);
     attachRowListeners(newRow);
 }
@@ -285,63 +340,31 @@ function removeMaterial(btn) {
     }
 }
 
-// Filter materials based on selected type
-function filterMaterials() {
-    const typeSelect = document.getElementById('materialTypeSelect');
-    const selectedType = typeSelect.value; // '', 'specific', or 'standard'
-    
-    // Specific parts categories
-    const specificCategories = [
-        'Engine Parts', 'Hydraulic Components', 'Bearings', 'Seals',
-        'Belts & Chains', 'Motors', 'Sensors', 'Control Units',
-        'Valves', 'Pumps', 'Compressors', 'Drive Components',
-        'Mechanical Parts', 'Electrical Components', 'Pneumatic Components',
-        'Transmission', 'Gearbox', 'Coupling', 'Clutch', 'Brake',
-        'Filter', 'Heat Exchanger', 'Reservoir', 'Actuators'
-    ];
-    
-    // Standard parts categories
-    const standardCategories = [
-        'Lubricants', 'Coolants', 'Cleaning Supplies', 'Safety Equipment',
-        'Fasteners', 'Tools', 'Hoses', 'Cables', 'Fittings',
-        'Consumables', 'Standard Parts', 'Liquids', 'Adhesives',
-        'Solvents', 'Tape', 'Gaskets', 'Washers', 'Springs'
-    ];
-    
-    // Get all material rows
-    const rows = document.querySelectorAll('.material-row');
-    
-    rows.forEach(row => {
-        const select = row.querySelector('.material-select');
-        const options = select.querySelectorAll('option');
-        
-        options.forEach(option => {
-            if (option.value === '') {
-                option.style.display = 'block'; // Always show placeholder
-                return;
-            }
-            
-            const category = option.getAttribute('data-category') || 'Uncategorized';
-            let shouldShow = true;
-            
-            if (selectedType === 'specific') {
-                shouldShow = specificCategories.includes(category);
-            } else if (selectedType === 'standard') {
-                shouldShow = standardCategories.includes(category);
-            }
-            // If selectedType is '', show all
-            
-            option.style.display = shouldShow ? 'block' : 'none';
-        });
-    });
-}
-
-// Validate all rows before submitting
+// Validate all rows and form requirements before submitting
 const demandForm = document.getElementById('demandForm');
 demandForm.addEventListener('submit', (event) => {
+    const zoneSelect = document.getElementById('zoneSelect');
+    const machineSelect = document.getElementById('machineSelect');
     const rows = document.querySelectorAll('.material-row');
-    let allValid = true;
 
+    // Validate zone selection
+    if (!zoneSelect.value) {
+        event.preventDefault();
+        alert('ERROR: You must select a Zone first.');
+        zoneSelect.focus();
+        return false;
+    }
+
+    // Validate machine selection
+    if (!machineSelect.value) {
+        event.preventDefault();
+        alert('ERROR: You must select a Machine second.');
+        machineSelect.focus();
+        return false;
+    }
+
+    // Validate all material rows
+    let allValid = true;
     rows.forEach(row => {
         const valid = validateRow(row);
         if (!valid) {
@@ -351,11 +374,15 @@ demandForm.addEventListener('submit', (event) => {
 
     if (!allValid) {
         event.preventDefault();
-        alert('Please fix the highlighted issues before submitting.');
+        alert('Please fix all highlighted issues before submitting.');
     }
 });
 
 // Initialize existing row(s)
 document.querySelectorAll('.material-row').forEach(attachRowListeners);
+
+// Initialize materials section as disabled until zone/machine are selected
+document.getElementById('materials-container').style.opacity = '0.5';
+document.getElementById('materials-container').style.pointerEvents = 'none';
 </script>
 {% endblock %}
