@@ -287,6 +287,12 @@ class SparePartsDemand(db.Model):
     priority = db.Column(db.String(50), default='medium')
     reason = db.Column(db.Text)
     
+    # Zone and Machine tracking for spare parts demand context
+    # Note: nullable=True for backward compatibility with existing records
+    # but application-level validation requires these for new demands
+    zone_id = db.Column(db.Integer, db.ForeignKey('zones.id'), nullable=True, index=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id'), nullable=True, index=True)
+    
     supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     supervisor_approval = db.Column(db.String(50), default='pending')
     supervisor_approval_date = db.Column(db.DateTime)

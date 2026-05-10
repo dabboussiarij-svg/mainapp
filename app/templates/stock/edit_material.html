@@ -63,6 +63,28 @@
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Stock Entry Date</label>
+                                <input type="date" class="form-control" name="stock_entry_date" 
+                                    value="{% if material.stock_entry_date %}{{ material.stock_entry_date.strftime('%Y-%m-%d') }}{% endif %}">
+                                <small class="text-muted">Date when spare part is first added to stock</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lifespan (Days)</label>
+                                <input type="number" class="form-control" name="lifespan_days" 
+                                    value="{{ material.lifespan_days or '' }}" min="0">
+                                <small class="text-muted">Lifespan of spare part in days (if applicable)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Stock Registration Date (Auto-generated)</label>
+                            <input type="text" class="form-control" disabled 
+                                value="{% if material.stock_registration_date %}{{ material.stock_registration_date.strftime('%Y-%m-%d %H:%M:%S') }}{% else %}Not set{% endif %}">
+                            <small class="text-muted">Automatically generated when spare part is registered in the system</small>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Supplier</label>
                             <input type="text" class="form-control" name="supplier" value="{{ material.supplier or '' }}">

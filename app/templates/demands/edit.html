@@ -21,6 +21,29 @@
             <div class="card">
                 <div class="card-body">
                     <form method="POST" id="editDemandForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Zone *</label>
+                                <select name="zone_id" id="zoneSelect" class="form-select" required onchange="updateMachines()">
+                                    <option value="">-- Select Zone --</option>
+                                    {% for zone in zones %}
+                                    <option value="{{ zone.id }}" {% if zone.id == demand.zone_id %}selected{% endif %}>{{ zone.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select the zone where the machine is located</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Machine *</label>
+                                <select name="machine_id" id="machineSelect" class="form-select" required>
+                                    <option value="">-- Select Machine --</option>
+                                    {% for machine in machines %}
+                                    <option value="{{ machine.id }}" data-zone-id="{{ machine.zone_id or '' }}" {% if machine.id == demand.machine_id %}selected{% endif %}>{{ machine.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select the specific machine needing spare parts</small>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Priority</label>
                             <select name="priority" class="form-select">
@@ -95,6 +118,45 @@
 </div>
 
 <script>
+// Dynamic machine filtering based on zone selection
+function updateMachines() {
+    const zoneSelect = document.getElementById('zoneSelect');
+    const machineSelect = document.getElementById('machineSelect');
+    const selectedZoneId = zoneSelect.value;
+
+    // Get all machine options
+    const allOptions = Array.from(machineSelect.querySelectorAll('option'));
+    
+    // Clear and reset machine select
+    machineSelect.innerHTML = '<option value="">-- Select Machine --</option>';
+    
+    if (!selectedZoneId) {
+        machineSelect.disabled = true;
+        return;
+    }
+
+    // Filter and add machines for selected zone
+    const zoneOptions = allOptions.filter(opt => {
+        const machineZoneId = opt.getAttribute('data-zone-id');
+        return machineZoneId === selectedZoneId;
+    });
+
+    if (zoneOptions.length === 0) {
+        machineSelect.innerHTML = '<option value="">No machines in this zone</option>';
+        machineSelect.disabled = true;
+        return;
+    }
+
+    zoneOptions.forEach(opt => {
+        const newOption = document.createElement('option');
+        newOption.value = opt.value;
+        newOption.textContent = opt.textContent;
+        machineSelect.appendChild(newOption);
+    });
+
+    machineSelect.disabled = false;
+}
+
 function updateRowAvailable(row) {
     const select = row.querySelector('.material-select');
     const qtyInput = row.querySelector('.quantity-input');

@@ -94,6 +94,28 @@
                             </span>
                         </p>
                     </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Zone</label>
+                            <p>
+                                {% if demand.zone %}
+                                    <strong>{{ demand.zone.name }}</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Machine</label>
+                            <p>
+                                {% if demand.machine %}
+                                    <strong>{{ demand.machine.name }}</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="text-muted small">Reason</label>
                         <p>{{ demand.reason or '-' }}</p>

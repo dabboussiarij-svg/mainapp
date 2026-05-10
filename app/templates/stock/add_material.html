@@ -68,6 +68,19 @@
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Stock Entry Date</label>
+                                <input type="date" class="form-control" name="stock_entry_date">
+                                <small class="text-muted">Date when spare part is first added to stock</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lifespan (Days)</label>
+                                <input type="number" class="form-control" name="lifespan_days" placeholder="e.g., 365" min="0">
+                                <small class="text-muted">Lifespan of spare part in days (if applicable)</small>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Supplier</label>
                             <input type="text" class="form-control" name="supplier" placeholder="e.g., Supplier Name">
@@ -94,6 +107,9 @@
                         <li>Minimum Stock - Alert level when stock reaches this</li>
                         <li>Maximum Stock - Recommended max storage level</li>
                         <li>Current Stock - Current quantity in inventory</li>
+                        <li>Stock Entry Date - When the spare part is first added</li>
+                        <li>Lifespan - Expected lifespan in days (optional)</li>
+                        <li>Registration Date - Auto-generated on creation</li>
                         <li>Both numeric values should be positive integers</li>
                     </ul>
                 </div>

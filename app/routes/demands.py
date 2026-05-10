@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
-from app.models import db, SparePartsDemand, Material, User, MaintenanceReport
+from app.models import db, SparePartsDemand, Material, User, MaintenanceReport, Zone, Machine
 from app.routes.auth import login_required, role_required
 from app.email_service import EmailService
 from datetime import datetime, timedelta
@@ -258,6 +258,37 @@ def create_demand():
     if request.method == 'POST':
         materials_data = request.form.getlist('material_id')
         quantities_data = request.form.getlist('quantity')
+        zone_id = request.form.get('zone_id')
+        machine_id = request.form.get('machine_id')
+        
+        # Validate required zone and machine
+        if not zone_id or not machine_id:
+            flash('Zone and Machine are required fields.', 'danger')
+            return redirect(url_for('demands.create_demand'))
+        
+        try:
+            zone_id = int(zone_id)
+            machine_id = int(machine_id)
+        except (ValueError, TypeError):
+            flash('Invalid Zone or Machine selection.', 'danger')
+            return redirect(url_for('demands.create_demand'))
+        
+        # Verify zone and machine exist
+        zone = Zone.query.get(zone_id)
+        machine = Machine.query.get(machine_id)
+        
+        if not zone:
+            flash('Selected Zone not found.', 'danger')
+            return redirect(url_for('demands.create_demand'))
+        
+        if not machine:
+            flash('Selected Machine not found.', 'danger')
+            return redirect(url_for('demands.create_demand'))
+        
+        # Verify machine belongs to selected zone
+        if machine.zone_id != zone_id:
+            flash('Selected Machine does not belong to the selected Zone.', 'danger')
+            return redirect(url_for('demands.create_demand'))
         
         user = User.query.get(session['user_id'])
         
@@ -312,12 +343,13 @@ def create_demand():
 
             demand = SparePartsDemand(
                 demand_number=demand_number,
-                maintenance_report_id=request.form.get('maintenance_report_id'),
                 requestor_id=session['user_id'],
                 material_id=material_id,
                 quantity_requested=int(quantity),
                 priority=request.form.get('priority', 'medium'),
                 reason=request.form.get('reason'),
+                zone_id=zone_id,
+                machine_id=machine_id,
                 supervisor_id=supervisor_id,
                 demand_status=demand_status
             )
@@ -357,12 +389,14 @@ def create_demand():
         return redirect(url_for('demands.list_demands'))
     
     materials = Material.query.all()
-    maintenance_reports = MaintenanceReport.query.filter_by(report_status='approved').all()
+    zones = Zone.query.all()
+    machines = Machine.query.all()
     
     return render_template(
         'demands/create.html',
         materials=materials,
-        maintenance_reports=maintenance_reports
+        zones=zones,
+        machines=machines
     )
 
 @demands_bp.route('/<int:demand_id>')
@@ -434,12 +468,45 @@ def edit_demand(demand_id):
         return redirect(url_for('demands.detail', demand_id=demand_id))
 
     materials = Material.query.all()
+    zones = Zone.query.all()
+    machines = Machine.query.all()
 
     if request.method == 'POST':
         material_ids = request.form.getlist('material_id')
         quantities = request.form.getlist('quantity')
         priority = request.form.get('priority', rep.priority)
         reason = request.form.get('reason', rep.reason)
+        zone_id = request.form.get('zone_id')
+        machine_id = request.form.get('machine_id')
+        
+        # Validate required zone and machine
+        if not zone_id or not machine_id:
+            flash('Zone and Machine are required fields.', 'danger')
+            return redirect(url_for('demands.edit_demand', demand_id=demand_id))
+        
+        try:
+            zone_id = int(zone_id)
+            machine_id = int(machine_id)
+        except (ValueError, TypeError):
+            flash('Invalid Zone or Machine selection.', 'danger')
+            return redirect(url_for('demands.edit_demand', demand_id=demand_id))
+        
+        # Verify zone and machine exist
+        zone = Zone.query.get(zone_id)
+        machine = Machine.query.get(machine_id)
+        
+        if not zone:
+            flash('Selected Zone not found.', 'danger')
+            return redirect(url_for('demands.edit_demand', demand_id=demand_id))
+        
+        if not machine:
+            flash('Selected Machine not found.', 'danger')
+            return redirect(url_for('demands.edit_demand', demand_id=demand_id))
+        
+        # Verify machine belongs to selected zone
+        if machine.zone_id != zone_id:
+            flash('Selected Machine does not belong to the selected Zone.', 'danger')
+            return redirect(url_for('demands.edit_demand', demand_id=demand_id))
 
         # Validate the requester's ability to update quantities
         for material_id, quantity in zip(material_ids, quantities):
@@ -489,6 +556,8 @@ def edit_demand(demand_id):
                 quantity_requested=int(quantity),
                 priority=priority,
                 reason=reason,
+                zone_id=zone_id,
+                machine_id=machine_id,
                 supervisor_id=rep.supervisor_id,
                 demand_status=rep.demand_status
             )
