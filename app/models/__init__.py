@@ -150,6 +150,7 @@ class Material(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100), index=True)
+    material_type = db.Column(db.String(50), default='standard', index=True)  # 'specific' or 'standard'
     unit = db.Column(db.String(50))
     min_stock = db.Column(db.Integer, default=10)
     max_stock = db.Column(db.Integer, default=100)

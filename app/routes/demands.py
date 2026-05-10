@@ -258,6 +258,7 @@ def create_demand():
     if request.method == 'POST':
         materials_data = request.form.getlist('material_id')
         quantities_data = request.form.getlist('quantity')
+        material_types_data = request.form.getlist('material_type')  # New: capture material types
         zone_id = request.form.get('zone_id')
         machine_id = request.form.get('machine_id')
         
@@ -341,12 +342,18 @@ def create_demand():
             suffix = chr(65 + (idx % 26))
             demand_number = f"{base_demand_number}-{suffix}"
 
+            # Get material type for this material (default to 'standard' if not provided)
+            material_type = 'standard'
+            if idx < len(material_types_data) and material_types_data[idx]:
+                material_type = material_types_data[idx]
+
             demand = SparePartsDemand(
                 demand_number=demand_number,
                 requestor_id=session['user_id'],
                 material_id=material_id,
                 quantity_requested=int(quantity),
                 priority=request.form.get('priority', 'medium'),
+                material_type=material_type,  # New: add material type
                 reason=request.form.get('reason'),
                 zone_id=zone_id,
                 machine_id=machine_id,
@@ -474,6 +481,7 @@ def edit_demand(demand_id):
     if request.method == 'POST':
         material_ids = request.form.getlist('material_id')
         quantities = request.form.getlist('quantity')
+        material_types = request.form.getlist('material_type')  # New: capture material types
         priority = request.form.get('priority', rep.priority)
         reason = request.form.get('reason', rep.reason)
         zone_id = request.form.get('zone_id')
@@ -548,6 +556,11 @@ def edit_demand(demand_id):
             suffix = chr(65 + (idx % 26))
             demand_number = f"{base}-{suffix}"
 
+            # Get material type for this material (default to 'standard' if not provided)
+            material_type = 'standard'
+            if idx < len(material_types) and material_types[idx]:
+                material_type = material_types[idx]
+
             demand_item = SparePartsDemand(
                 demand_number=demand_number,
                 maintenance_report_id=rep.maintenance_report_id,
@@ -555,6 +568,7 @@ def edit_demand(demand_id):
                 material_id=material_id,
                 quantity_requested=int(quantity),
                 priority=priority,
+                material_type=material_type,  # New: add material type
                 reason=reason,
                 zone_id=zone_id,
                 machine_id=machine_id,

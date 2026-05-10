@@ -288,6 +288,7 @@ class SparePartsDemand(db.Model):
     material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False)
     quantity_requested = db.Column(db.Integer, nullable=False)
     priority = db.Column(db.String(20), default='medium')
+    material_type = db.Column(db.String(20), default='standard')  # 'specific' or 'standard'
     requested_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
