@@ -76,6 +76,7 @@
                                                     <option value="">Select type...</option>
                                                     <option value="specific">Specific</option>
                                                     <option value="standard">Standard</option>
+                                                    <option value="chemical_product">Chemical Product</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-4">
@@ -141,69 +142,109 @@ let allMaterials = [
     {% endfor %}
 ];
 
-// Dynamic machine filtering based on zone selection and load materials
+// Dynamic machine filtering based on zone selection
 function updateMachines() {
     const zoneSelect = document.getElementById('zoneSelect');
     const machineSelect = document.getElementById('machineSelect');
     const selectedZoneId = zoneSelect.value;
 
-    // Get all machine options
-    const allOptions = Array.from(machineSelect.querySelectorAll('option'));
-    
-    // Clear and reset machine select
-    machineSelect.innerHTML = '<option value="">-- Select Machine --</option>';
-    
-    if (!selectedZoneId) {
-        machineSelect.disabled = true;
-        // Disable materials when no zone selected
-        document.getElementById('materials-container').style.opacity = '0.5';
-        document.getElementById('materials-container').style.pointerEvents = 'none';
-        return;
-    }
-
-    // Filter and add machines for selected zone
-    const zoneOptions = allOptions.filter(opt => {
-        const machineZoneId = opt.getAttribute('data-zone-id');
-        return machineZoneId === selectedZoneId;
-    });
-
-    if (zoneOptions.length === 0) {
-        machineSelect.innerHTML = '<option value="">No machines in this zone</option>';
-        machineSelect.disabled = true;
-        // Disable materials when no machines available
-        document.getElementById('materials-container').style.opacity = '0.5';
-        document.getElementById('materials-container').style.pointerEvents = 'none';
-        return;
-    }
-
-    zoneOptions.forEach(opt => {
-        const newOption = document.createElement('option');
-        newOption.value = opt.value;
-        newOption.textContent = opt.textContent;
-        machineSelect.appendChild(newOption);
-    });
-
-    machineSelect.disabled = false;
-    // Reset machine selection when zone changes
+    // Reset machine select when zone changes
     machineSelect.value = '';
-    // Disable materials until machine is selected
-    document.getElementById('materials-container').style.opacity = '0.5';
-    document.getElementById('materials-container').style.pointerEvents = 'none';
+
+    if (!selectedZoneId) {
+        // If no zone selected, disable machine select and clear options
+        machineSelect.disabled = true;
+        // Clear all options except the placeholder
+        const options = machineSelect.querySelectorAll('option:not([value=""])');
+        options.forEach(opt => opt.remove());
+        machineSelect.innerHTML = '<option value="">-- Select Machine --</option>';
+        machineSelect.style.opacity = '0.5';
+        machineSelect.style.cursor = 'not-allowed';
+        
+        // Disable materials section
+        document.getElementById('materials-container').style.opacity = '0.5';
+        document.getElementById('materials-container').style.pointerEvents = 'none';
+        document.getElementById('materials-info-message').innerHTML = 
+            '<i class="bi bi-info-circle"></i> <strong>Step 2:</strong> Please select a Zone first.';
+        
+        return;
+    }
+
+    // Fetch machines for the selected zone via API
+    fetch(`/demands/api/machines-for-zone/${selectedZoneId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch machines');
+            return response.json();
+        })
+        .then(data => {
+            // Clear machine select and rebuild with zone-specific machines
+            machineSelect.innerHTML = '<option value="">-- Select Machine --</option>';
+            
+            if (data.machines && data.machines.length > 0) {
+                machineSelect.disabled = false;
+                machineSelect.style.opacity = '1';
+                machineSelect.style.cursor = 'auto';
+                
+                data.machines.forEach(machine => {
+                    const option = document.createElement('option');
+                    option.value = machine.id;
+                    option.textContent = machine.name + ' (' + machine.machine_code + ')';
+                    option.dataset.zoneId = machine.zone_id;
+                    machineSelect.appendChild(option);
+                });
+            } else {
+                machineSelect.disabled = true;
+                machineSelect.style.opacity = '0.5';
+                machineSelect.style.cursor = 'not-allowed';
+                const option = document.createElement('option');
+                option.textContent = '-- No machines in this zone --';
+                machineSelect.appendChild(option);
+            }
+            
+            // Reset materials when machines change
+            document.getElementById('materials-container').style.opacity = '0.5';
+            document.getElementById('materials-container').style.pointerEvents = 'none';
+            document.getElementById('materials-info-message').innerHTML = 
+                '<i class="bi bi-info-circle"></i> <strong>Step 2:</strong> Now select a Machine.';
+        })
+        .catch(error => {
+            console.error('Error fetching machines:', error);
+            machineSelect.disabled = true;
+            machineSelect.style.opacity = '0.5';
+            machineSelect.innerHTML = '<option value="">-- Error loading machines --</option>';
+        });
 }
 
-// Load materials when machine is selected
+// Handle machine selection change
 function onMachineSelected() {
+    const zoneSelect = document.getElementById('zoneSelect');
     const machineSelect = document.getElementById('machineSelect');
     const selectedMachineId = machineSelect.value;
-    
-    // Enable materials section
-    if (selectedMachineId) {
-        document.getElementById('materials-container').style.opacity = '1';
-        document.getElementById('materials-container').style.pointerEvents = 'auto';
-    } else {
+
+    if (!selectedMachineId) {
+        // If machine not selected, disable materials
         document.getElementById('materials-container').style.opacity = '0.5';
         document.getElementById('materials-container').style.pointerEvents = 'none';
+        document.getElementById('materials-info-message').innerHTML = 
+            '<i class="bi bi-info-circle"></i> <strong>Step 2:</strong> Please select a Machine first.';
+        return;
     }
+
+    // Enable materials section
+    if (zoneSelect.value && selectedMachineId) {
+        document.getElementById('materials-container').style.opacity = '1';
+        document.getElementById('materials-container').style.pointerEvents = 'auto';
+        document.getElementById('materials-info-message').innerHTML = 
+            '<i class="bi bi-info-circle"></i> <strong>Step 3:</strong> Select material type and materials for this machine.';
+    }
+}
+
+// Store zone/machine data for later reference
+function getSelectedZoneAndMachine() {
+    return {
+        zoneId: document.getElementById('zoneSelect').value,
+        machineId: document.getElementById('machineSelect').value
+    };
 }
 
 // Attach machine selection change listener

@@ -707,6 +707,7 @@ def maintenance_report_card():
             return redirect(url_for('main.maintenance_report_card'))
     
     # Handle GET request (display form)
+    zones = Zone.query.all()
     machines = Machine.query.filter_by(status='active').all()
     
     # Check if there's a draft report to resume
@@ -720,6 +721,7 @@ def maintenance_report_card():
     
     return render_template(
         'maintenance_report_card.html',
+        zones=zones,
         machines=machines,
         current_user=user,
         draft_report=draft_report,

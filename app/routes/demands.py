@@ -1012,6 +1012,35 @@ def restore_archived_demand(demand_id):
     flash(f'Demand group {base} has been restored to active list.', 'success')
     return redirect(url_for('demands.detail', demand_id=demand_id))
 
+@demands_bp.route('/api/machines-for-zone/<int:zone_id>', methods=['GET'])
+@login_required
+def get_machines_for_zone(zone_id):
+    """
+    API endpoint to fetch machines available in a specific zone.
+    Returns JSON with machine options filtered by zone_id.
+    """
+    from flask import jsonify
+    
+    zone = Zone.query.get(zone_id)
+    if not zone:
+        return jsonify({'error': 'Zone not found'}), 404
+    
+    # Get all active machines in the selected zone
+    machines = Machine.query.filter_by(zone_id=zone_id, status='active').order_by(Machine.name.asc()).all()
+    
+    machines_data = [
+        {
+            'id': m.id,
+            'name': m.name,
+            'machine_code': m.machine_code,
+            'zone_id': m.zone_id,
+        }
+        for m in machines
+    ]
+    
+    return jsonify({'machines': machines_data})
+
+
 @demands_bp.route('/api/materials-for-machine/<int:machine_id>', methods=['GET'])
 @login_required
 def get_materials_for_machine(machine_id):
