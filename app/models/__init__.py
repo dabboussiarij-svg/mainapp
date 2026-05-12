@@ -150,7 +150,7 @@ class Material(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100), index=True)
-    material_type = db.Column(db.String(50), default='standard', index=True)  # 'specific' or 'standard'
+    material_type = db.Column(db.String(50), default='standard', index=True)  # 'standard', 'specific', or 'chemical'
     unit = db.Column(db.String(50))
     min_stock = db.Column(db.Integer, default=10)
     max_stock = db.Column(db.Integer, default=100)
@@ -159,12 +159,16 @@ class Material(db.Model):
     unit_cost = db.Column(db.Float)
     supplier = db.Column(db.String(100))
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=True)
+    zone_id = db.Column(db.Integer, db.ForeignKey('zones.id'), nullable=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id'), nullable=True)
     last_restocked = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     supplier_obj = db.relationship('Supplier', backref='materials')
+    zone = db.relationship('Zone', backref='materials')
+    machine = db.relationship('Machine', backref='materials')
     demands = db.relationship('SparePartsDemand', backref='material')
     movements = db.relationship('StockMovement', backref='material')
     alerts = db.relationship('StockAlert', backref='material', cascade='all, delete-orphan')
