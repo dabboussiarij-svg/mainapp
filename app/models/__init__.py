@@ -700,3 +700,50 @@ class MachineEvent(db.Model):
         if self.reaction_time_seconds:
             return self.reaction_time_seconds / 60
         return 0
+
+
+class SensorCount(db.Model):
+    """
+    Tracks sensor/impulse counts for preventive maintenance monitoring
+    Every movement/impulse is counted and monitored against a threshold
+    """
+    __tablename__ = 'sensor_counts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id', ondelete='CASCADE'), nullable=False, index=True)
+    date = db.Column(db.Date, nullable=False, index=True)
+    
+    # Count tracking
+    daily_count = db.Column(db.Integer, default=0)  # Impulses counted today
+    total_count = db.Column(db.Integer, default=0)  # Cumulative count from start
+    
+    # Threshold status
+    threshold_reached = db.Column(db.Boolean, default=False)  # True when preventive maintenance is due
+    threshold_value = db.Column(db.Integer, default=300000)  # Threshold that triggers maintenance
+    
+    # Reset tracking
+    reset_by_user_id = db.Column(db.String(100), nullable=True)  # User who reset the counter
+    reset_at = db.Column(db.DateTime, nullable=True)  # When counter was reset
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    machine = db.relationship('Machine', backref='sensor_counts')
+    
+    def __repr__(self):
+        return f'<SensorCount {self.machine_id}: {self.date} - {self.daily_count} impulses>'
+    
+    @property
+    def percentage_to_threshold(self):
+        """Calculate percentage of threshold reached"""
+        if self.threshold_value > 0:
+            return min(int((self.total_count / self.threshold_value) * 100), 100)
+        return 0
+    
+    @property
+    def impulses_until_maintenance(self):
+        """Calculate remaining impulses until preventive maintenance is due"""
+        remaining = self.threshold_value - self.total_count
+        return max(remaining, 0)

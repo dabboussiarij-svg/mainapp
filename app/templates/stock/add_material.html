@@ -20,6 +20,7 @@
             <div class="card">
                 <div class="card-body">
                     <form method="POST">
+                        <!-- Basic Information Section -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Material Code *</label>
@@ -27,65 +28,100 @@
                                 <small class="text-muted">Unique identifier for the material</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Category *</label>
-                                <input type="text" class="form-control" name="category" placeholder="e.g., Fluids, Components" required>
+                                <label class="form-label">Part Name *</label>
+                                <input type="text" class="form-control" name="name" placeholder="e.g., Hydraulic Oil" required>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Material Name *</label>
-                            <input type="text" class="form-control" name="name" placeholder="e.g., Hydraulic Oil" required>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Category *</label>
+                                <input type="text" class="form-control" name="category" placeholder="e.g., Fluids, Components" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Material Type</label>
+                                <select class="form-select" name="material_type">
+                                    <option value="standard" selected>Standard</option>
+                                    <option value="specific">Specific</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" rows="3" placeholder="Detailed description of the material"></textarea>
+                            <textarea class="form-control" name="description" rows="2" placeholder="Detailed description of the material"></textarea>
                         </div>
 
+                        <!-- Stock Information Section -->
+                        <hr class="my-4">
+                        <h6 class="mb-3"><i class="bi bi-boxes"></i> Stock Information</h6>
+
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Unit *</label>
+                            <div class="col-md-3">
+                                <label class="form-label">Current Stock *</label>
+                                <input type="number" class="form-control" name="current_stock" value="0" required>
+                                <small class="text-muted">Current quantity</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Minimum Stock *</label>
+                                <input type="number" class="form-control" name="min_stock" value="10" required>
+                                <small class="text-muted">Alert level</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Maximum Stock *</label>
+                                <input type="number" class="form-control" name="max_stock" value="100" required>
+                                <small class="text-muted">Max storage level</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Reorder Point</label>
+                                <input type="number" class="form-control" name="reorder_point" placeholder="Optional">
+                                <small class="text-muted">Reorder trigger</small>
+                            </div>
+                        </div>
+
+                        <!-- Unit & Pricing Section -->
+                        <hr class="my-4">
+                        <h6 class="mb-3"><i class="bi bi-cash-coin"></i> Unit & Pricing</h6>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Unit of Measure *</label>
                                 <input type="text" class="form-control" name="unit" placeholder="e.g., Liter, Unit, kg" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Unit Cost ($) *</label>
                                 <input type="number" class="form-control" name="unit_cost" step="0.01" placeholder="0.00" required>
                             </div>
-                        </div>
-
-                        <div class="row mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Minimum Stock *</label>
-                                <input type="number" class="form-control" name="min_stock" value="10" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Maximum Stock *</label>
-                                <input type="number" class="form-control" name="max_stock" value="100" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Current Stock *</label>
-                                <input type="number" class="form-control" name="current_stock" value="0" required>
+                                <label class="form-label">Supplier</label>
+                                <input type="text" class="form-control" name="supplier" placeholder="e.g., Supplier Name">
                             </div>
                         </div>
 
+                        <!-- Dates & Lifespan Section -->
+                        <hr class="my-4">
+                        <h6 class="mb-3"><i class="bi bi-calendar-check"></i> Dates & Lifespan</h6>
+
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Stock Entry Date</label>
                                 <input type="date" class="form-control" name="stock_entry_date">
                                 <small class="text-muted">Date when spare part is first added to stock</small>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Lifespan (Days)</label>
                                 <input type="number" class="form-control" name="lifespan_days" placeholder="e.g., 365" min="0">
-                                <small class="text-muted">Lifespan of spare part in days (if applicable)</small>
+                                <small class="text-muted">Expected lifespan in days</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Registration Date</label>
+                                <input type="text" class="form-control" value="Auto-generated on creation" disabled>
+                                <small class="text-muted">System generated</small>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Supplier</label>
-                            <input type="text" class="form-control" name="supplier" placeholder="e.g., Supplier Name">
-                        </div>
-
+                        <!-- Action Buttons -->
+                        <hr class="my-4">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle"></i> Add Material

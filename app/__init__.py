@@ -48,6 +48,7 @@ def create_app(config_name='development'):
     from app.routes.demands import demands_bp
     from app.routes.technician import technician_bp
     from app.routes.machine_events import events_bp
+    from app.routes.sensor_events import sensor_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
@@ -57,6 +58,7 @@ def create_app(config_name='development'):
     app.register_blueprint(demands_bp)
     app.register_blueprint(technician_bp)
     app.register_blueprint(events_bp)
+    app.register_blueprint(sensor_bp)
     
     # Context processor to inject user info into templates
     @app.context_processor

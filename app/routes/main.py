@@ -1613,15 +1613,25 @@ def add_material():
             except ValueError:
                 pass
         
+        # Parse optional reorder point
+        reorder_point = None
+        if request.form.get('reorder_point'):
+            try:
+                reorder_point = int(request.form.get('reorder_point'))
+            except ValueError:
+                pass
+        
         material = Material(
             code=request.form.get('code'),
             name=request.form.get('name'),
             description=request.form.get('description'),
             category=request.form.get('category'),
+            material_type=request.form.get('material_type', 'standard'),
             unit=request.form.get('unit'),
             min_stock=int(request.form.get('min_stock', 10)),
             max_stock=int(request.form.get('max_stock', 100)),
             current_stock=int(request.form.get('current_stock', 0)),
+            reorder_point=reorder_point,
             unit_cost=float(request.form.get('unit_cost', 0)),
             supplier=request.form.get('supplier'),
             lifespan_days=lifespan_days,
