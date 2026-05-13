@@ -264,7 +264,6 @@ def maintenance_kpis():
         for report in all_reports:
             logger.info(f"Sample: ID={report.id}, created_at={report.created_at}, machine={report.machine_name}")
     
-    canceled_events = 0
     total_downtime_seconds = 0
     total_maintenance_seconds = 0
     maintenance_event_count = 0
@@ -277,9 +276,6 @@ def maintenance_kpis():
     
     # Process MACHINE EVENTS
     for event in machine_events:
-        if event.event_status == 'cancelled':
-            canceled_events += 1
-        
         # Count event types
         event_type_counts[event.event_type] = event_type_counts.get(event.event_type, 0) + 1
         
@@ -327,11 +323,6 @@ def maintenance_kpis():
             maintenance_event_count += 1
             logger.info(f"Report {report.id}: Added {report.actual_duration_hours} hours to maintenance")
         
-        # Count rejected reports as issues
-        if report.report_status == 'rejected':
-            canceled_events += 1
-            logger.info(f"Report {report.id}: Marked as rejected")
-        
         # Count issues found
         if report.issues_found:
             breakdown_count += 1
@@ -341,28 +332,14 @@ def maintenance_kpis():
         report_type = report.report_type or 'unknown'
         event_type_counts[f"report_{report_type}"] = event_type_counts.get(f"report_{report_type}", 0) + 1
     
-    logger.info(f"Report Processing: maintenance_event_count={maintenance_event_count}, breakdown_count={breakdown_count}, canceled_events={canceled_events}")
+    logger.info(f"Report Processing: maintenance_event_count={maintenance_event_count}, breakdown_count={breakdown_count}")
 
     # Calculate KPI metrics
     total_downtime_hours = total_downtime_seconds / 3600 if total_downtime_seconds else 0
     total_downtime_minutes = total_downtime_seconds / 60 if total_downtime_seconds else 0
-    avg_downtime_seconds = (total_downtime_seconds / downtime_event_count) if downtime_event_count > 0 else 0
     
     # Operational hours in the period
     operational_hours = (end - start).total_seconds() / 3600
-    
-    # Availability rate = (operational_hours - downtime_hours) / operational_hours * 100
-    if operational_hours > 0:
-        availability_rate = ((operational_hours - total_downtime_hours) / operational_hours) * 100
-        availability_rate = max(0, min(100, availability_rate))
-    else:
-        availability_rate = 100
-    
-    # Total incidents = all events that required action (downtime + maintenance + breakdowns)
-    total_incidents = downtime_event_count + maintenance_event_count + breakdown_count
-    
-    # Failure rate = number of incidents / total data points (events + reports)
-    failure_rate = (total_incidents / total_data_points) if total_data_points > 0 else 0
     
     # MTTR (Mean Time To Repair) in seconds = average maintenance duration (across ALL maintenance events & reports)
     mttr_seconds = (total_maintenance_seconds / maintenance_event_count) if maintenance_event_count > 0 else 0
@@ -389,6 +366,41 @@ def maintenance_kpis():
     status_labels = list(event_type_counts.keys())
     status_counts = list(event_type_counts.values())
     
+    # Calculate Temps d'arrêt (Downtime Index/Stoppage Time)
+    # Formula: Temps d'arrêt (Tps) = (Σ minutes d'arrêts MNT / Σ minutes produite) / 60000 × 0.8
+    # Using only MaintenanceReport data
+    maintenance_minutes_from_reports = 0
+    for report in maintenance_reports:
+        if report.actual_duration_hours:
+            maintenance_minutes_from_reports += (report.actual_duration_hours * 60)
+    
+    # Production minutes = operational hours in minutes (no downtime deduction)
+    production_minutes = operational_hours * 60
+    
+    if production_minutes > 0:
+        temps_arret = ((maintenance_minutes_from_reports / production_minutes) / 60000) * 0.8
+    else:
+        temps_arret = 0
+    
+    # Prepare Pareto data: machines sorted by downtime (descending)
+    machines_by_downtime = sorted(
+        events_per_machine_dict.items(),
+        key=lambda x: x[1]['downtime_hours'],
+        reverse=True
+    )[:15]  # Top 15 machines by downtime
+    
+    pareto_machine_labels = [m[0] for m in machines_by_downtime]
+    pareto_downtime_hours = [round(m[1]['downtime_hours'], 2) for m in machines_by_downtime]
+    
+    # Calculate cumulative percentage for Pareto line
+    total_downtime_all_machines = sum(d for d in pareto_downtime_hours)
+    pareto_cumulative_percent = []
+    cumulative = 0
+    for downtime in pareto_downtime_hours:
+        cumulative += downtime
+        percentage = (cumulative / total_downtime_all_machines * 100) if total_downtime_all_machines > 0 else 0
+        pareto_cumulative_percent.append(round(percentage, 1))
+    
     # Format context
     end_display = end - timedelta(days=1)
     context = {
@@ -397,19 +409,19 @@ def maintenance_kpis():
         'end_display': end_display,
         'total_events': total_data_points,
         'total_downtime_hours': round(total_downtime_minutes, 2),  # Display in minutes for clarity
-        'canceled_events': canceled_events,
-        'avg_downtime_seconds': int(avg_downtime_seconds),
-        'availability_rate': round(availability_rate, 2),
-        'failure_rate': round(failure_rate, 4),
         'mttr_seconds': int(mttr_minutes),  # Display in minutes for readability
         'mtbf_hours': round(mtbf_hours, 2),
+        'temps_arret': round(temps_arret, 6),  # Temps d'arrêt (Downtime Index)
         'most_common_type': most_common_type,
         'most_active': None,  # Can be extended if needed
         'events_per_machine': sorted_events_per_machine,
         'machine_labels': machine_labels,
         'machine_counts': machine_counts,
         'status_labels': status_labels,
-        'status_counts': status_counts
+        'status_counts': status_counts,
+        'pareto_machine_labels': pareto_machine_labels,
+        'pareto_downtime_hours': pareto_downtime_hours,
+        'pareto_cumulative_percent': pareto_cumulative_percent
     }
 
     return render_template('main/maintenance_kpis.html', **context)

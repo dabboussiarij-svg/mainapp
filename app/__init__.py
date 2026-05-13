@@ -35,6 +35,60 @@ def create_app(config_name='development'):
                         text("ALTER TABLE material_returns ADD COLUMN return_status VARCHAR(50) DEFAULT 'pending'")
                     )
                     conn.commit()
+        
+        # Add zone_id and machine_id columns to materials table if they don't exist
+        if 'materials' in inspector.get_table_names():
+            columns = [c['name'] for c in inspector.get_columns('materials')]
+            if 'zone_id' not in columns:
+                # Add zone_id column
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text("ALTER TABLE materials ADD COLUMN zone_id INT NULL")
+                        )
+                        conn.commit()
+                except:
+                    pass  # Column may already exist or fail silently
+            if 'machine_id' not in columns:
+                # Add machine_id column
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text("ALTER TABLE materials ADD COLUMN machine_id INT NULL")
+                        )
+                        conn.commit()
+                except:
+                    pass  # Column may already exist or fail silently
+            if 'lifespan_days' not in columns:
+                # Add lifespan_days column
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text("ALTER TABLE materials ADD COLUMN lifespan_days INT NULL")
+                        )
+                        conn.commit()
+                except:
+                    pass  # Column may already exist or fail silently
+            if 'stock_entry_date' not in columns:
+                # Add stock_entry_date column
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text("ALTER TABLE materials ADD COLUMN stock_entry_date DATETIME NULL")
+                        )
+                        conn.commit()
+                except:
+                    pass  # Column may already exist or fail silently
+            if 'stock_registration_date' not in columns:
+                # Add stock_registration_date column
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text("ALTER TABLE materials ADD COLUMN stock_registration_date DATETIME DEFAULT CURRENT_TIMESTAMP")
+                        )
+                        conn.commit()
+                except:
+                    pass  # Column may already exist or fail silently
 
     # Initialize Flask-Mail (needed for async email alerts)
     from app.email_service import mail

@@ -161,6 +161,9 @@ class Material(db.Model):
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=True)
     zone_id = db.Column(db.Integer, db.ForeignKey('zones.id'), nullable=True)
     machine_id = db.Column(db.Integer, db.ForeignKey('machines.id'), nullable=True)
+    lifespan_days = db.Column(db.Integer, nullable=True)
+    stock_entry_date = db.Column(db.DateTime, nullable=True)
+    stock_registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_restocked = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -202,14 +205,27 @@ class Machine(db.Model):
     purchase_date = db.Column(db.Date)
     installation_date = db.Column(db.Date)
     status = db.Column(db.String(50), default='active', index=True)
+    
+    # Conditional Maintenance Fields
+    operation_count = db.Column(db.Integer, default=0, index=True)  # Tracks operation count
+    conditional_maintenance_threshold = db.Column(db.Integer, default=300000)  # Threshold for maintenance alert
+    last_conditional_reset_date = db.Column(db.DateTime, nullable=True)  # Last time counter was reset
+    last_conditional_replacement_date = db.Column(db.DateTime, nullable=True)  # Last time component was replaced
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     maintenance_schedules = db.relationship('MaintenanceSchedule', backref='machine', cascade='all, delete-orphan')
+    conditional_records = db.relationship('ConditionalMaintenanceRecord', backref='machine', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Machine {self.machine_code}>'
+    
+    @property
+    def is_conditional_maintenance_due(self):
+        """Check if conditional maintenance is due"""
+        return self.operation_count >= self.conditional_maintenance_threshold
 
 class MaintenanceSchedule(db.Model):
     __tablename__ = 'maintenance_schedules'
@@ -623,6 +639,43 @@ class PreventiveMaintenanceTaskExecution(db.Model):
             duration = self.end_time - self.start_time
             return int(duration.total_seconds() / 60)
         return None
+
+
+class ConditionalMaintenanceRecord(db.Model):
+    """Tracks conditional maintenance actions (reset or replace) for machines"""
+    __tablename__ = 'conditional_maintenance_records'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machines.id', ondelete='CASCADE'), nullable=False, index=True)
+    technician_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Action type
+    action_type = db.Column(db.String(50), nullable=False)  # 'reset' or 'replace'
+    
+    # Before action
+    operation_count_before = db.Column(db.Integer, nullable=False)  # Count before action
+    
+    # After action
+    operation_count_after = db.Column(db.Integer, nullable=False)  # Count after action (0 for reset, current for replace)
+    
+    # Details
+    description = db.Column(db.Text)  # Technician notes
+    components_replaced = db.Column(db.Text)  # If replace: what was replaced
+    
+    # Report link
+    maintenance_report_id = db.Column(db.Integer, db.ForeignKey('maintenance_reports.id', ondelete='SET NULL'), nullable=True)
+    
+    # Notification tracking
+    email_sent = db.Column(db.Boolean, default=False)
+    email_sent_to = db.Column(db.String(255))  # Email addresses notified
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    technician = db.relationship('User', backref='conditional_maintenance_actions')
+    
+    def __repr__(self):
+        return f'<ConditionalMaintenanceRecord {self.id}: {self.action_type}>'
 
 
 class MachineStatus(db.Model):
