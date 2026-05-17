@@ -1258,6 +1258,131 @@ def conditional_maintenance_history():
         current_user=user
     )
 
+@preventive_bp.route('/conditional/report', methods=['GET', 'POST'])
+@login_required
+@role_required('technician')
+def conditional_maintenance_report():
+    """Interactive conditional maintenance report form"""
+    user = User.query.get(session['user_id'])
+    
+    if request.method == 'POST':
+        # Process form submission
+        try:
+            # Extract form data
+            technician_name = request.form.get('technicien', '')
+            report_date = request.form.get('date', '')
+            machine_type = request.form.get('machine', '')
+            zone = request.form.get('machineArea', '')
+            sap_code = request.form.get('machineSap', '')
+            counter = request.form.get('compteur', '')
+            observations = request.form.get('observations', '')
+            tech_signature = request.form.get('technicianSignature', '')
+            supervisor_signature = request.form.get('supervisorSignature', '')
+            
+            # Extract all checks (28 checks)
+            checks_data = {}
+            check_names = [
+                'machine_clean', 'visual_anomaly', 'abnormal_vibration', 'abnormal_noise', 'cutting_residue',
+                'blade_condition', 'blade_wear', 'blade_crack', 'blade_chip', 'blade_alignment', 'blade_deformation',
+                'camera_check', 'blade_edge_status',
+                'knife_position', 'v_movement', 'stripping_quality', 'residue_removal', 'mechanism_status',
+                'blade_block_mounting', 'tightening_status', 'mechanical_play', 'component_positioning', 'functional_test',
+                'cleaning_done', 'secured_area', 'waste_removed', 'machine_operational'
+            ]
+            
+            for check_name in check_names:
+                checks_data[check_name] = request.form.get(check_name, 'N/A')
+            
+            # Extract anomaly data
+            anomaly_detected = request.form.get('detected_anomaly') == 'on'
+            criticality = request.form.get('criticality', 'low')
+            anomaly_description = request.form.get('anomaly_description', '')
+            adjustment_done = request.form.get('adjustmentDone') == 'on'
+            blade_replacement = request.form.get('bladeReplacement') == 'on'
+            head_adjustment = request.form.get('headAdjustment') == 'on'
+            escalation = request.form.get('maintenanceEscalation') == 'on'
+            spare_parts = request.form.get('spare_parts_used', '')
+            
+            # Create maintenance report
+            report = MaintenanceReport()
+            report.technician_id = user.id
+            report.machine_name = machine_type or 'Unknown'
+            report.work_description = f'Conditional Preventive Maintenance - State-Based Inspection'
+            report.report_type = 'preventive'
+            report.report_subtype = 'preventive_conditional'
+            report.report_status = 'submitted'
+            report.created_at = datetime.utcnow()
+            report.actual_end_time = datetime.utcnow()
+            report.findings = observations
+            
+            # Store all check results as JSON
+            report_data = {
+                'machine_type': machine_type,
+                'zone': zone,
+                'sap_code': sap_code,
+                'counter': counter,
+                'checks': checks_data,
+                'anomaly': {
+                    'detected': anomaly_detected,
+                    'criticality': criticality,
+                    'description': anomaly_description,
+                    'actions': {
+                        'adjustment': adjustment_done,
+                        'blade_replacement': blade_replacement,
+                        'head_adjustment': head_adjustment,
+                        'escalation': escalation,
+                        'spare_parts': spare_parts
+                    }
+                },
+                'signatures': {
+                    'technician': tech_signature,
+                    'supervisor': supervisor_signature
+                },
+                'report_date': report_date,
+                'technician_name': technician_name
+            }
+            
+            report.checklist_data = json.dumps(report_data)
+            
+            db.session.add(report)
+            db.session.commit()
+            
+            # Send email notification to supervisor
+            try:
+                supervisor = None
+                if user.supervisor_id:
+                    supervisor = User.query.get(user.supervisor_id)
+                
+                if supervisor and supervisor.email:
+                    EmailService.send_maintenance_report_to_supervisor(
+                        report=report,
+                        supervisor=supervisor,
+                        pdf_html=render_template('maintenance_report_card.html', report=report, current_user=user),
+                        report_type='preventive_conditional'
+                    )
+            except Exception as e:
+                print(f'Error sending email: {str(e)}')
+            
+            flash('✓ Conditional maintenance report submitted successfully!', 'success')
+            return redirect(url_for('main.preventive_reports_view'))
+            
+        except Exception as e:
+            print(f'Error saving report: {str(e)}')
+            flash(f'✗ Error saving report: {str(e)}', 'error')
+            return redirect(request.referrer or url_for('main.dashboard'))
+    
+    # GET - Render the form
+    return render_template(
+        'preventive_maintenance/conditional_maintenance_report.html',
+        current_user=user,
+        machine_types=[
+            {'value': 'KOMAX 355', 'label': 'KOMAX 355'},
+            {'value': 'PS9550', 'label': 'PS9550'},
+            {'value': 'BT712', 'label': 'BT712'},
+            {'value': 'CC36 SP', 'label': 'CC36 SP'}
+        ]
+    )
+
 @preventive_bp.route('/conditional/<int:machine_id>/reset', methods=['GET', 'POST'])
 @login_required
 @role_required('technician')
