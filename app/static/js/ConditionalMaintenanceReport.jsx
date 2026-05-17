@@ -141,75 +141,332 @@ const inputStyle = {
 };
 
 export default function App() {
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
-    technicien: "", 
-    date: new Date().toISOString().split("T")[0],
-    machine: "", 
-    machineArea: "", 
-    machineSap: "",
-    compteur: "",
-    observations: "", 
-    technicianSignature: "", 
-    supervisorSignature: ""
-  });
-  
-  const [checks, setChecks] = useState({
-    machine_clean: null,
-    visual_anomaly: null,
-    abnormal_vibration: null,
-    abnormal_noise: null,
-    cutting_residue: null,
-    blade_condition: null,
-    blade_wear: null,
-    blade_crack: null,
-    blade_chip: null,
-    blade_alignment: null,
-    blade_deformation: null,
-    camera_check: null,
-    blade_edge_status: null,
-    knife_position: null,
-    v_movement: null,
-    stripping_quality: null,
-    residue_removal: null,
-    mechanism_status: null,
-    blade_block_mounting: null,
-    tightening_status: null,
-    mechanical_play: null,
-    component_positioning: null,
-    functional_test: null,
-    cleaning_done: null,
-    secured_area: null,
-    waste_removed: null,
-    machine_operational: null,
-  });
+  // Check for pre-selected data from data attributes or global variables
+  const containerEl = typeof document !== 'undefined' ? document.currentScript?.parentElement : null;
+  const preSelectedTechnician = containerEl?.dataset?.technicianName || window.__conditionalReport?.technicianName || "";
+  const preSelectedMachine = containerEl?.dataset?.machineName || window.__conditionalReport?.machineName || "";
+  const preSelectedZone = containerEl?.dataset?.zone || window.__conditionalReport?.zone || "";
+  const isPreSelected = !!(preSelectedTechnician && preSelectedMachine);
 
-  const [anomalyData, setAnomalyData] = useState({
-    detected: false,
-    criticality: "low",
-    description: "",
-    adjustmentDone: false,
-    bladeReplacement: false,
-    headAdjustment: false,
-    maintenanceEscalation: false,
-    sparePartsUsed: ""
-  });
+  const [machine, setMachine] = useState(preSelectedMachine || "");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const [submitted, setSubmitted] = useState(false);
+  const checkItems = [
+    { id: 1, label: "Machine propre", note: "État de la propreté générale" },
+    { id: 2, label: "Absence d'anomalies visuelles", note: "Vérifier fuites, fissures, corrosion" },
+    { id: 3, label: "Vibrations anormales", note: "Écouter et ressentir pendant fonctionnement" },
+    { id: 4, label: "Bruits anormaux", note: "Grincements, cliquetis, sifflements" },
+    { id: 5, label: "Résidus de coupe présents", note: "Vérifier accumulation de débris" },
+    { id: 6, label: "État général des lames", note: "Aspect, brillance, déformations" },
+    { id: 7, label: "Usure des lames", note: "Vérifier uniformité et progression" },
+    { id: 8, label: "Absence de fissures", note: "Inspectez la surface entière" },
+    { id: 9, label: "Absence d'ébréchures", note: "Vérifier les arêtes et tranchants" },
+    { id: 10, label: "Alignement des lames", note: "Vérifier parallélisme et positionnement" },
+    { id: 11, label: "Absence de déformations", note: "Vérifier planéité et rectitude" },
+    { id: 12, label: "Vérification caméra effectuée", note: "Inspection détaillée avec caméra USB" },
+    { id: 13, label: "État des arêtes de coupe", note: "Partie opérative des lames" },
+    { id: 14, label: "Position des couteaux", note: "Vérifier écartement et positionnement" },
+    { id: 15, label: "Mouvement vertical", note: "Course et fluidité du mouvement" },
+    { id: 16, label: "Qualité du dénudage", note: "Uniformité et propreté" },
+    { id: 17, label: "Évacuation des résidus", note: "Absence de blocage ou accumulation" },
+    { id: 18, label: "État du mécanisme", note: "Fluide, sans blocage" },
+    { id: 19, label: "Montage du bloc lame", note: "Fixation et stabilité" },
+    { id: 20, label: "État du serrage", note: "Vis et boulons correctement serrés" },
+    { id: 21, label: "Absence de jeu mécanique", note: "Vérifier rigidité du bloc" },
+    { id: 22, label: "Positionnement des composants", note: "Alignement et positionnement corrects" },
+    { id: 23, label: "Test fonctionnel", note: "Fonctionnement sans à-coups" },
+    { id: 24, label: "Nettoyage effectué", note: "Machine complètement nettoyée" },
+    { id: 25, label: "Zone sécurisée", note: "Aucun débris ou objet traînant" },
+    { id: 26, label: "Résidus évacués", note: "Tous les débris collectés" },
+    { id: 27, label: "Machine opérationnelle", note: "Prêt pour la production" },
+    { id: 28, label: "Anomalies détectées", note: "Vérifier anomalies générales" },
+  ];
 
-  const setCheck = (key, val) => setChecks(c => ({ ...c, [key]: val }));
-  const setField = (key, val) => setForm(f => ({ ...f, [key]: val }));
-  const setAnomaly = (key, val) => setAnomalyData(a => ({ ...a, [key]: val }));
+  const [checks, setChecks] = useState(
+    Object.fromEntries(checkItems.map(item => [item.id, ""]))
+  );
 
-  const totalChecks = Object.values(checks).filter(v => v !== null).length;
-  const allChecks = Object.keys(checks).length;
-  const nokCount = Object.values(checks).filter(v => v === "NOK").length;
-  const okCount = Object.values(checks).filter(v => v === "OK").length;
-  const progress = Math.round((totalChecks / allChecks) * 100);
+  const [remarks, setRemarks] = useState(
+    Object.fromEntries(checkItems.map(item => [item.id, ""]))
+  );
 
-  const machineInfo = MACHINE_TYPES.find(m => m.value === form.machine);
+  const [time, setTime] = useState(
+    Object.fromEntries(checkItems.map(item => [item.id, ""]))
+  );
 
-  const steps = ["Identification", "État Général", "Lames & Caméra", "Dénudage & Bloc", "Nettoyage & Anomalies", "Actions", "Résumé"];
+  const filteredItems = checkItems.filter(item =>
+    item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.note.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const completedCount = Object.values(checks).filter(v => v).length;
+  const totalCount = checkItems.length;
+  const estimatedDuration = 204; // minutes
+
+  const handleSetCheck = (id, value) => {
+    setChecks(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSetRemark = (id, value) => {
+    setRemarks(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSetTime = (id, value) => {
+    setTime(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!machine || !date) {
+      alert("Veuillez sélectionner une machine et une date d'intervention");
+      return;
+    }
+    setFormSubmitted(true);
+    // In real implementation, submit the form data
+    setTimeout(() => {
+      alert("Rapport soumis avec succès!");
+      setFormSubmitted(false);
+    }, 1000);
+  };
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)", background: COLORS.bg, minHeight: "100vh", paddingBottom: "2rem" }}>
+      {/* Header */}
+      <div style={{ background: "white", borderBottom: `1px solid ${COLORS.border}`, padding: "1.5rem", marginBottom: "1.5rem" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h1 style={{ margin: "0 0 0.25rem", fontSize: 28, fontWeight: 700, color: COLORS.textPrimary }}>
+              <i className="ti ti-calendar" style={{ marginRight: 8 }} />
+              Monthly Preventive Systematic Maintenance
+            </h1>
+            <p style={{ margin: 0, fontSize: 14, color: COLORS.textSecondary }}>Complete your monthly preventive maintenance tasks</p>
+          </div>
+          <button
+            onClick={() => window.history.back()}
+            style={{
+              padding: "8px 16px", border: `1px solid ${COLORS.border}`, background: "white",
+              borderRadius: 6, cursor: "pointer", fontSize: 13, color: COLORS.textPrimary, fontWeight: 600,
+              transition: "all 0.2s"
+            }}
+          >
+            ← Back to Reports
+          </button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 1.5rem" }}>
+        <form onSubmit={handleSubmit}>
+          {/* Machine & Date Selection */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Select Machine</label>
+              <select
+                value={machine}
+                onChange={(e) => setMachine(e.target.value)}
+                disabled={isPreSelected}
+                style={{
+                  width: "100%", padding: "10px 12px", fontSize: 15, fontWeight: 500,
+                  border: `1px solid ${COLORS.border}`, borderRadius: 8, background: "white",
+                  color: COLORS.textPrimary, cursor: isPreSelected ? "default" : "pointer"
+                }}
+              >
+                <option value="">— Sélectionner —</option>
+                {MACHINE_TYPES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Execution Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", fontSize: 15, fontWeight: 500,
+                  border: `1px solid ${COLORS.border}`, borderRadius: 8, background: "white",
+                  color: COLORS.textPrimary
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Info Bar */}
+          <div style={{
+            background: COLORS.success, color: "white", borderRadius: 12, padding: "1.25rem 1.5rem",
+            marginBottom: 24, display: "flex", alignItems: "center", gap: 12
+          }}>
+            <i className="ti ti-checkbox" style={{ fontSize: 32 }} />
+            <div>
+              <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700 }}>Monthly Tasks ({totalCount} items)</h2>
+              <p style={{ margin: 0, fontSize: 14, opacity: 0.9 }}>
+                <i className="ti ti-clock" style={{ marginRight: 4, fontSize: 14 }} />
+                Estimated total Duration: {estimatedDuration} minutes
+              </p>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <i className="ti ti-search" style={{
+                position: "absolute", left: 12, fontSize: 18, color: COLORS.textSecondary
+              }} />
+              <input
+                type="text"
+                placeholder="Search for monthly task..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: "100%", paddingLeft: 40, paddingRight: 12, padding: "10px 12px 10px 40px",
+                  fontSize: 14, border: `1px solid ${COLORS.border}`, borderRadius: 8,
+                  background: "white", color: COLORS.textPrimary
+                }}
+              />
+              <span style={{
+                position: "absolute", right: 12, fontSize: 12, fontWeight: 700,
+                color: COLORS.success, background: COLORS.bg, padding: "4px 8px", borderRadius: 4
+              }}>
+                {filteredItems.length} task(s)
+              </span>
+            </div>
+          </div>
+
+          {/* Task Table */}
+          <div style={{
+            background: "white", borderRadius: 12, border: `1px solid ${COLORS.border}`,
+            overflow: "hidden", marginBottom: 24
+          }}>
+            {/* Table Header */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "60px 300px 200px 150px 100px 200px",
+              gap: 16, padding: "16px 20px", background: COLORS.bg,
+              borderBottom: `2px solid ${COLORS.success}`, alignItems: "center"
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>N°</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>Task Description</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>Criteria</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>OK / NOK</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>Time (min)</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, textTransform: "uppercase" }}>Remarks</div>
+            </div>
+
+            {/* Task Rows */}
+            {filteredItems.map((item, idx) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "grid", gridTemplateColumns: "60px 300px 200px 150px 100px 200px",
+                  gap: 16, padding: "12px 20px", borderBottom: `1px solid ${COLORS.border}`,
+                  alignItems: "center", background: idx % 2 === 0 ? "white" : COLORS.bg,
+                  transition: "all 0.2s"
+                }}
+              >
+                {/* N° */}
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary }}>
+                  {item.id}
+                </div>
+
+                {/* Task Description */}
+                <div style={{ fontSize: 13, color: COLORS.textPrimary }}>
+                  <p style={{ margin: "0 0 2px", fontWeight: 600 }}>{item.label}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: COLORS.textSecondary }}>{item.note}</p>
+                </div>
+
+                {/* Criteria (empty for now) */}
+                <div style={{ fontSize: 12, color: COLORS.textSecondary }}>—</div>
+
+                {/* OK / NOK Buttons */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => handleSetCheck(item.id, "OK")}
+                    style={{
+                      padding: "4px 10px", fontSize: 11, fontWeight: 600, borderRadius: 4,
+                      cursor: "pointer", transition: "all 0.15s",
+                      background: checks[item.id] === "OK" ? COLORS.success : "transparent",
+                      color: checks[item.id] === "OK" ? "white" : COLORS.success,
+                      border: `1px solid ${COLORS.success}`
+                    }}
+                  >
+                    OK
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetCheck(item.id, "NOK")}
+                    style={{
+                      padding: "4px 10px", fontSize: 11, fontWeight: 600, borderRadius: 4,
+                      cursor: "pointer", transition: "all 0.15s",
+                      background: checks[item.id] === "NOK" ? COLORS.danger : "transparent",
+                      color: checks[item.id] === "NOK" ? "white" : COLORS.danger,
+                      border: `1px solid ${COLORS.danger}`
+                    }}
+                  >
+                    NOK
+                  </button>
+                </div>
+
+                {/* Time Input */}
+                <input
+                  type="number"
+                  min="0"
+                  max="999"
+                  placeholder="—"
+                  value={time[item.id]}
+                  onChange={(e) => handleSetTime(item.id, e.target.value)}
+                  style={{
+                    width: "100%", padding: "6px 8px", fontSize: 12, border: `1px solid ${COLORS.border}`,
+                    borderRadius: 4, background: "white", color: COLORS.textPrimary, textAlign: "center"
+                  }}
+                />
+
+                {/* Remarks */}
+                <input
+                  type="text"
+                  placeholder="Add remarks..."
+                  value={remarks[item.id]}
+                  onChange={(e) => handleSetRemark(item.id, e.target.value)}
+                  style={{
+                    width: "100%", padding: "6px 8px", fontSize: 12, border: `1px solid ${COLORS.border}`,
+                    borderRadius: 4, background: "white", color: COLORS.textPrimary
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              style={{
+                padding: "10px 24px", fontSize: 14, fontWeight: 700, borderRadius: 8,
+                cursor: "pointer", background: "white", color: COLORS.textPrimary,
+                border: `1px solid ${COLORS.border}`, transition: "all 0.2s"
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={formSubmitted}
+              style={{
+                padding: "10px 24px", fontSize: 14, fontWeight: 700, borderRadius: 8,
+                cursor: formSubmitted ? "not-allowed" : "pointer", background: COLORS.success,
+                color: "white", border: "none", transition: "all 0.2s",
+                opacity: formSubmitted ? 0.7 : 1
+              }}
+            >
+              <i className="ti ti-check" style={{ marginRight: 6 }} />
+              Submit Report
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
   if (submitted) {
     return (
@@ -329,25 +586,52 @@ export default function App() {
         {/* STEP 0: Identification */}
         {step === 0 && (
           <div>
-            <Section title="Informations générales" icon="clipboard-text" color="#185fa5">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <Field label="Technicien">
-                  <input style={inputStyle} placeholder="Nom du technicien" value={form.technicien} onChange={e => setField("technicien", e.target.value)} />
-                </Field>
-                <Field label="Date d'intervention">
-                  <input type="date" style={inputStyle} value={form.date} onChange={e => setField("date", e.target.value)} />
-                </Field>
-                <Field label="Type de machine">
-                  <select style={inputStyle} value={form.machine} onChange={e => setField("machine", e.target.value)}>
-                    <option value="">— Sélectionner —</option>
-                    {MACHINE_TYPES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </Field>
-                <Field label="Zone / Workstation">
-                  <input style={inputStyle} placeholder="Ex: K355 — P1 Automat" value={form.machineArea} onChange={e => setField("machineArea", e.target.value)} />
-                </Field>
-              </div>
-            </Section>
+            {/* Show this section only if data is not pre-selected */}
+            {!isPreSelected && (
+              <Section title="Informations générales" icon="clipboard-text" color="#185fa5">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <Field label="Technicien">
+                    <input style={inputStyle} placeholder="Nom du technicien" value={form.technicien} onChange={e => setField("technicien", e.target.value)} />
+                  </Field>
+                  <Field label="Date d'intervention">
+                    <input type="date" style={inputStyle} value={form.date} onChange={e => setField("date", e.target.value)} />
+                  </Field>
+                  <Field label="Type de machine">
+                    <select style={inputStyle} value={form.machine} onChange={e => setField("machine", e.target.value)}>
+                      <option value="">— Sélectionner —</option>
+                      {MACHINE_TYPES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Zone / Workstation">
+                    <input style={inputStyle} placeholder="Ex: K355 — P1 Automat" value={form.machineArea} onChange={e => setField("machineArea", e.target.value)} />
+                  </Field>
+                </div>
+              </Section>
+            )}
+            
+            {/* Show summary if data is pre-selected */}
+            {isPreSelected && (
+              <Section title="Informations sélectionnées" icon="clipboard-text" color="#2d8a4e">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div style={{ padding: "12px", background: COLORS.bg, borderRadius: "8px", border: `0.5px solid ${COLORS.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase" }}>Technicien</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 600, color: COLORS.textPrimary }}>{form.technicien}</p>
+                  </div>
+                  <div style={{ padding: "12px", background: COLORS.bg, borderRadius: "8px", border: `0.5px solid ${COLORS.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase" }}>Date d'intervention</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 600, color: COLORS.textPrimary }}>{new Date(form.date).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div style={{ padding: "12px", background: COLORS.bg, borderRadius: "8px", border: `0.5px solid ${COLORS.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase" }}>Type de machine</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 600, color: COLORS.textPrimary }}>{machineInfo?.label || form.machine}</p>
+                  </div>
+                  <div style={{ padding: "12px", background: COLORS.bg, borderRadius: "8px", border: `0.5px solid ${COLORS.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase" }}>Zone / Workstation</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 600, color: COLORS.textPrimary }}>{form.machineArea || "N/A"}</p>
+                  </div>
+                </div>
+              </Section>
+            )}
           </div>
         )}
 

@@ -342,18 +342,59 @@
         <p style="text-align: right; margin-top: 1rem; margin-bottom: 0;"><small>Réf. PMC-AA-TN</small></p>
     </div>
 
+    <!-- Pass pre-selected data to React component if machine is available -->
+    {% if machine %}
+    <script>
+        window.__conditionalReport = {
+            technicianName: "{{ current_user.full_name if current_user else 'Technicien' }}",
+            machineName: "{{ machine.name if machine else '' }}",
+            zone: "{{ machine.zone if machine and machine.zone else '' }}"
+        };
+    </script>
+    {% endif %}
+
     <form method="POST" id="conditionalReportForm">
         <!-- SECTION 1: Informations générales -->
         <div class="form-section">
             <div class="section-title">
                 <i class="ti ti-clipboard-text"></i>
+                {% if machine %}
+                Informations sélectionnées
+                {% else %}
                 Informations générales
+                {% endif %}
             </div>
 
+            {% if machine %}
+            <!-- When machine is pre-selected, show as read-only display -->
+            <div class="grid-2">
+                <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Technicien</label>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ current_user.full_name if current_user else 'Technicien' }}</p>
+                    <input type="hidden" name="technicien" value="{{ current_user.full_name if current_user else '' }}">
+                </div>
+                <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Date d'intervention</label>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ now.strftime('%d/%m/%Y') if now else '' }}</p>
+                    <input type="hidden" name="date" value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+                </div>
+                <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Type de machine</label>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.name if machine else 'N/A' }}</p>
+                    <input type="hidden" name="machine" value="{{ machine.name if machine else '' }}">
+                </div>
+                <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Zone / Workstation</label>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.zone if machine and machine.zone else 'N/A' }}</p>
+                    <input type="hidden" name="machineArea" value="{{ machine.zone if machine and machine.zone else '' }}">
+                </div>
+            </div>
+            {% else %}
+            <!-- When no machine is pre-selected, show as form inputs -->
             <div class="grid-2">
                 <div class="form-group">
                     <label>Technicien *</label>
-                    <input type="text" name="technicien" placeholder="Nom du technicien" required>
+                    <input type="text" name="technicien" placeholder="Nom du technicien" value="{{ current_user.full_name if current_user else '' }}" required>
                 </div>
                 <div class="form-group">
                     <label>Date d'intervention *</label>
@@ -374,6 +415,7 @@
                     <input type="text" name="machineArea" placeholder="Ex: K355 — P1 Automat">
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- SECTION 2: État Général -->
@@ -909,8 +951,8 @@ document.getElementById('conditionalReportForm').addEventListener('submit', (e) 
     e.preventDefault();
     
     // Validate required fields
-    const technicien = document.querySelector('input[name="technicien"]').value;
-    const machine = document.querySelector('select[name="machine"]').value;
+    const technicien = document.querySelector('input[name="technicien"]').value || document.querySelector('input[name="technicien"][type="hidden"]')?.value;
+    const machine = document.querySelector('select[name="machine"]')?.value || document.querySelector('input[name="machine"][type="hidden"]')?.value;
     
     if (!technicien || !machine) {
         alert('Veuillez remplir les champs obligatoires (Technicien et Type de machine)');
