@@ -466,11 +466,7 @@ export default function App() {
       </div>
     </div>
   );
-};
-
-  if (submitted) {
-    return (
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "2rem 1rem" }}>
+}
         <h2 className="sr-only">Rapport soumis avec succès</h2>
         <div style={{
           textAlign: "center", padding: "3rem 2rem",
