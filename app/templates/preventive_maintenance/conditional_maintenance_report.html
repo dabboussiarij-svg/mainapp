@@ -4,6 +4,11 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+<!-- React and ReactDOM from CDN -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- Babel Standalone for JSX transpilation -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
     :root {
         --color-primary: #185fa5;
@@ -334,24 +339,17 @@
 {% endblock %}
 
 {% block content %}
-<div class="report-container">
-    <div class="report-header">
-        <p><strong><i class="fas fa-building"></i> SEBN TN — Service Maintenance</strong></p>
-        <h1>Rapport de maintenance préventive conditionnelle</h1>
-        <p class="subtitle">Inspection basée sur l'état machine</p>
-        <p style="text-align: right; margin-top: 1rem; margin-bottom: 0;"><small>Réf. PMC-AA-TN</small></p>
-    </div>
+<div id="root"></div>
 
-    <!-- Pass pre-selected data to React component if machine is available -->
-    {% if machine %}
-    <script>
-        window.__conditionalReport = {
-            technicianName: "{{ current_user.full_name if current_user else 'Technicien' }}",
-            machineName: "{{ machine.name if machine else '' }}",
-            zone: "{{ machine.zone if machine and machine.zone else '' }}"
-        };
-    </script>
-    {% endif %}
+<!-- Pass pre-selected data to window for React component -->
+{% if machine %}
+<script>
+    window.__conditionalReport = {
+        technicianName: "{{ current_user.full_name if current_user else 'Technicien' }}",
+        machineName: "{{ machine.name if machine else '' }}",
+        zone: "{{ machine.zone if machine and machine.zone else '' }}"
+    };
+
 
     <form method="POST" id="conditionalReportForm">
         <!-- SECTION 1: Informations générales -->
