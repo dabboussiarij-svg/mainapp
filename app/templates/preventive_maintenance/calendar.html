@@ -42,6 +42,8 @@
         border-radius: 8px;
         padding: 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow-x: auto;
+        min-width: 0;
     }
 
     .calendar-sidebar {
@@ -104,6 +106,49 @@
         padding: 2px 4px;
         cursor: pointer;
     }
+
+    /* Multi-month calendar styles */
+    .fc-daygrid {
+        border: 1px solid #dee2e6;
+    }
+
+    .fc-daygrid-day.fc-day {
+        border: 1px solid #dee2e6;
+    }
+
+    .fc-col-header-cell {
+        background-color: #f8f9fa;
+        padding: 8px 0;
+    }
+
+    .fc .fc-daygrid-day-number {
+        padding: 6px;
+    }
+
+    /* Adjust calendar grid for better multi-month visibility */
+    .fc .fc-daygrid-day-frame {
+        min-height: 60px;
+    }
+
+    .fc .fc-daygrid-day {
+        border-width: 0.5px;
+    }
+
+    /* Make FC container scrollable and responsive */
+    .fc {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Prevent day cells from being too small in multi-month view */
+    .fc-daygrid-day-number {
+        font-size: 0.85rem;
+    }
+
+    .fc-daygrid-day-frame > div {
+        min-height: 50px;
+    }
+
 </style>
 {% endblock %}
 
@@ -372,7 +417,7 @@ function initializeCalendar() {
 function filterCalendar() {
     currentMachineId = document.getElementById('machineSelect').value;
     currentZoneId = document.getElementById('zoneSelect').value;
-    console.log('Filters changed - Machine:', currentMachineId || 'All', 'Zone:', currentZoneId || 'All');
+    console.log('🔍 Filters changed - Machine:', currentMachineId || 'All', 'Zone:', currentZoneId || 'All');
     if (calendarInstance) {
         calendarInstance.refetchEvents();
     }
@@ -418,84 +463,20 @@ function updateUpcomingEvents(events) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== Calendar Initialization Started ===');
-    const calendarEl = document.getElementById('calendar');
+    console.log('=== Page Initialization Started ===');
     
-    if (!calendarEl) {
-        console.error('Calendar element not found!');
-        return;
-    }
+    // Initialize calendar
+    initializeCalendar();
     
-    calendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        contentHeight: 'auto',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: function(info, successCallback, failureCallback) {
-            let apiUrl = '{{ url_for("preventive.calendar_api") }}?date_range=' + currentDateRange;
-            
-            if (currentMachineId) {
-                apiUrl += '&machine_id=' + currentMachineId;
-            }
-            if (currentZoneId) {
-                apiUrl += '&zone_id=' + currentZoneId;
-            }
-            
-            console.log('📅 Fetching events from API:', apiUrl);
-            
-            fetch(apiUrl)
-                .then(response => {
-                    console.log('📡 API Response status:', response.status);
-                    return response.json();
-                })
-                .then(events => {
-                    console.log('✅ Events received:', events.length, 'events');
-                    console.log('Events data:', events);
-                    allEvents = events;
-                    updateStatistics(events);
-                    updateUpcomingEvents(events);
-                    successCallback(events);
-                })
-                .catch(error => {
-                    console.error('❌ Error fetching events:', error);
-                    failureCallback(error);
-                });
-        },
-        eventClick: function(info) {
-            const event = info.event;
-            const props = event.extendedProps;
-            
-            const html = `
-                <p><strong>Machine:</strong> ${props.machine}</p>
-                <p><strong>Status:</strong> <span class="badge" style="background-color: ${event.backgroundColor}; color: white;">${props.status.toUpperCase()}</span></p>
-                <p><strong>Date:</strong> ${new Date(event.start).toLocaleDateString()}</p>
-            `;
-            
-            document.getElementById('eventTitle').textContent = event.title;
-            document.getElementById('eventBody').innerHTML = html;
-            document.getElementById('eventViewLink').href = '/preventive-maintenance/execution/' + props.executionId;
-            
-            $('#eventModal').modal('show');
-        }
-    });
-    
-    console.log('📅 Rendering calendar...');
-    calendarInstance.render();
-    console.log('✅ Calendar rendered successfully');
-    
-    // Set default date range button as active
-    const defaultBtn = document.querySelector('[data-range="1"]');
+    // Set default calendar view button as active
+    const defaultBtn = document.querySelector('[data-view="month"]');
     if (defaultBtn) {
         defaultBtn.classList.add('active', 'btn-primary');
         defaultBtn.classList.remove('btn-outline-primary');
-        console.log('✅ Default 1-month button set as active');
+        console.log('✅ Default Month view button set as active');
     }
     
-    console.log('=== Calendar Initialization Complete ===');
+    console.log('=== Page Initialization Complete ===');
 });
 
 </script>

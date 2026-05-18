@@ -395,462 +395,6 @@
         padding: 2rem;
     }
 </style>
-
-    body {
-        font-family: var(--font-sans);
-        background-color: var(--color-bg);
-    }
-
-    .report-container {
-        max-width: 760px;
-        margin: 0 auto;
-        padding: 1.5rem 1rem;
-    }
-
-    .report-header {
-        background: #fff;
-        border: 0.5px solid var(--color-border);
-        border-radius: var(--border-radius-lg);
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 20px;
-        border-left: 3px solid var(--color-primary);
-    }
-
-    .report-header h1 {
-        margin: 4px 0 2px;
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--color-text-primary);
-    }
-
-    .report-header p {
-        margin: 0;
-        font-size: 11px;
-        color: var(--color-text-secondary);
-    }
-
-    .report-header .subtitle {
-        font-size: 13px;
-        color: var(--color-text-secondary);
-    }
-
-    .form-section {
-        background: #fff;
-        border: 0.5px solid var(--color-border);
-        border-radius: var(--border-radius-lg);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .section-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid var(--color-primary);
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--color-text-primary);
-    }
-
-    .section-title i {
-        font-size: 18px;
-        color: var(--color-primary);
-    }
-
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--color-text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 6px;
-    }
-
-    .form-group input[type="text"],
-    .form-group input[type="date"],
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 8px 10px;
-        border: 0.5px solid var(--color-border);
-        border-radius: var(--border-radius-md);
-        font-size: 14px;
-        background-color: var(--color-bg);
-        color: var(--color-text-primary);
-        font-family: inherit;
-        box-sizing: border-box;
-    }
-
-    .form-group textarea {
-        min-height: 90px;
-        resize: vertical;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-
-    .check-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 10px 0;
-        border-bottom: 0.5px solid var(--color-border);
-    }
-
-    .check-item input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        cursor: pointer;
-        accent-color: var(--color-primary);
-    }
-
-    .check-label {
-        flex: 1;
-    }
-
-    .check-label-main {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--color-text-primary);
-        margin-bottom: 2px;
-    }
-
-    .check-label-note {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-    }
-
-    .status-group {
-        display: flex;
-        gap: 6px;
-        justify-content: flex-end;
-    }
-
-    .status-btn {
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        border: 1.5px solid;
-        background: transparent;
-        transition: all 0.15s;
-    }
-
-    .status-btn.ok {
-        border-color: var(--color-success);
-        color: var(--color-success);
-    }
-
-    .status-btn.ok.active {
-        background-color: var(--color-success);
-        color: #fff;
-    }
-
-    .status-btn.nok {
-        border-color: var(--color-danger);
-        color: var(--color-danger);
-    }
-
-    .status-btn.nok.active {
-        background-color: var(--color-danger);
-        color: #fff;
-    }
-
-    .status-btn.na {
-        border-color: var(--color-neutral);
-        color: var(--color-neutral);
-    }
-
-    .status-btn.na.active {
-        background-color: var(--color-neutral);
-        color: #fff;
-    }
-
-    .anomaly-section {
-        background-color: #FAECE7;
-        border: 1px solid #F0997B;
-        border-radius: var(--border-radius-md);
-        padding: 12px;
-        margin-top: 12px;
-    }
-
-    .anomaly-section.hidden {
-        display: none;
-    }
-
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 24px;
-        flex-wrap: wrap;
-    }
-
-    button {
-        padding: 9px 20px;
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-md);
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        background-color: #fff;
-        color: var(--color-text-primary);
-    }
-
-    .btn-primary {
-        background-color: var(--color-primary);
-        color: #fff;
-        border-color: var(--color-primary);
-    }
-
-    .btn-primary:hover {
-        opacity: 0.9;
-    }
-
-    .btn-success {
-        background-color: var(--color-success);
-        color: #fff;
-        border-color: var(--color-success);
-    }
-
-    .btn-success:hover {
-        opacity: 0.9;
-    }
-
-    .btn-success:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .success-message {
-        text-align: center;
-        padding: 3rem 2rem;
-        border: 0.5px solid var(--color-border);
-        border-radius: var(--border-radius-lg);
-        background: #fff;
-    }
-
-    .success-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background-color: var(--color-success);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 4px 12px rgba(45, 138, 78, 0.2);
-    }
-
-    .success-icon i {
-        font-size: 32px;
-        color: #fff;
-        font-weight: 700;
-    }
-
-    .success-message h2 {
-        margin: 0 0 8px;
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--color-text-primary);
-    }
-
-    .success-message p {
-        color: var(--color-text-secondary);
-        margin: 0 0 24px;
-        font-weight: 500;
-    }
-
-    .success-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin: 0 0 28px;
-    }
-
-    .stat-box {
-        padding: 12px;
-        background-color: var(--color-bg);
-        border-radius: var(--border-radius-md);
-        border: 0.5px solid var(--color-border);
-    }
-
-    .stat-value {
-        margin: 0;
-        font-size: 22px;
-        font-weight: 700;
-    }
-
-    .stat-label {
-        margin: 0;
-        font-size: 12px;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-    }
-
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    } .btn-success {
-        background-color: var(--color-success);
-        color: #fff;
-        border-color: var(--color-success);
-    }
-
-    .btn-success:hover {
-        opacity: 0.9;
-    }
-
-    .btn-success:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .success-message {
-        text-align: center;
-        padding: 3rem 2rem;
-        border: 0.5px solid var(--color-border);
-        border-radius: var(--border-radius-lg);
-        background: #fff;
-    }
-
-    .success-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background-color: var(--color-success);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 4px 12px rgba(45, 138, 78, 0.2);
-    }
-
-    .success-icon i {
-        font-size: 32px;
-        color: #fff;
-        font-weight: 700;
-    }
-
-    .success-message h2 {
-        margin: 0 0 8px;
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--color-text-primary);
-    }
-
-    .success-message p {
-        color: var(--color-text-secondary);
-        margin: 0 0 24px;
-        font-weight: 500;
-    }
-
-    .success-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin: 0 0 28px;
-    }
-
-    .stat-box {
-        padding: 12px;
-        background-color: var(--color-bg);
-        border-radius: var(--border-radius-md);
-        border: 0.5px solid var(--color-border);
-    }
-
-    .stat-value {
-        margin: 0;
-        font-size: 22px;
-        font-weight: 700;
-    }
-
-    .stat-label {
-        margin: 0;
-        font-size: 12px;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-    }
-
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-
-    /* Calendar Styles */
-    .fc {
-        font-family: inherit;
-    }
-    .fc .fc-button-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    .fc .fc-button-primary:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
-    }
-    .fc .fc-button-primary:not(:disabled).fc-button-active {
-        background-color: #0056b3;
-        border-color: #0056b3;
-    }
-    .calendar-wrapper {
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .event-info {
-        padding: 10px;
-        background: white;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .event-status {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 3px;
-        font-size: 0.85rem;
-        font-weight: bold;
-        margin-top: 5px;
-    }
-    /* Date range button styling */
-    .date-range-btn {
-        transition: all 0.3s ease;
-        margin-right: 5px;
-    }
-    .date-range-btn.active {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-        color: white !important;
-    }
-    .date-range-btn:hover:not(.active) {
-        background-color: #f8f9fa;
-    }
-    .btn-group .date-range-btn {
-        border-radius: 0;
-    }
-    .btn-group .date-range-btn:first-child {
-        border-radius: 0.25rem 0 0 0.25rem;
-    }
-    .btn-group .date-range-btn:last-child {
-        border-radius: 0 0.25rem 0.25rem 0;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
@@ -863,90 +407,45 @@
             </h1>
             <p class="text-muted">View and track preventive maintenance tasks by machine and date range</p>
         </div>
+        <!-- Only show filter form if no machine is pre-selected -->
+        {% if not machine %}
         <div class="col-md-4">
             <form method="GET" class="form-inline" id="filterForm">
                 <select name="machine_id" class="form-control form-control-sm mr-2" id="machineSelect" onchange="this.form.submit()">
                     <option value="">-- Select Machine --</option>
-                    {% for machine in machines %}
-                    <option value="{{ machine.id }}" {% if selected_machine and selected_machine.id == machine.id %}selected{% endif %}>
-                        {{ machine.machine_code }} - {{ machine.machine_name }}
+                    {% for machine_option in machines %}
+                    <option value="{{ machine_option.id }}" {% if selected_machine and selected_machine.id == machine_option.id %}selected{% endif %}>
+                        {{ machine_option.machine_code }} - {{ machine_option.machine_name }}
                     </option>
                     {% endfor %}
                 </select>
                 <select name="zone_id" class="form-control form-control-sm" onchange="this.form.submit()">
                     <option value="">All Zones</option>
-                    {% for zone in zones %}
-                    <option value="{{ zone.id }}" {% if selected_zone and selected_zone.id == zone.id %}selected{% endif %}>
-                        {{ zone.name }}
+                    {% for zone_option in zones %}
+                    <option value="{{ zone_option.id }}" {% if selected_zone and selected_zone.id == zone_option.id %}selected{% endif %}>
+                        {{ zone_option.name }}
                     </option>
                     {% endfor %}
                 </select>
             </form>
         </div>
-    </div>
-
-    <!-- Date Range Filter (visible when machine is selected) -->
-    {% if selected_machine %}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="card-title mb-3">
-                        <i class="fas fa-filter"></i> View Period:
-                    </h6>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn active" data-range="1">
-                            <i class="fas fa-calendar"></i> 1 Month
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="3">
-                            <i class="fas fa-calendar"></i> 3 Months
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="6">
-                            <i class="fas fa-calendar"></i> 6 Months
-                        </button>
-                    </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="fas fa-info-circle"></i> Select a date range to filter the report. Default: 1 Month
-                    </small>
-                </div>
+        {% else %}
+        <!-- Show selected machine and zone info when pre-filled from URL -->
+        <div class="col-md-4">
+            <div class="alert alert-primary" role="alert">
+                <strong>Selected:</strong><br>
+                <i class="fas fa-industry"></i> <strong>Machine:</strong> {{ machine.machine_code }} - {{ machine.machine_name }}<br>
+                {% if zone %}<i class="fas fa-map-marker-alt"></i> <strong>Zone:</strong> {{ zone.name }}{% endif %}
+                <br>
+                <small><a href="{{ url_for('preventive.conditional_maintenance_report') }}" class="alert-link">Change Selection</a></small>
             </div>
         </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="alert alert-info" role="alert">
-                <i class="fas fa-info-circle"></i> 
-                <strong>Please select a machine</strong> from the dropdown above to begin viewing reports and schedule preventive maintenance tasks.
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Calendar Section (visible when machine is selected) -->
-    {% if selected_machine %}
+    {% if machine %}
     <div class="row mb-3">
-        <div class="col-md-8">
-            <div class="calendar-wrapper">
-                <div id="calendar"></div>
-            </div>
-        </div>
-        
-        <!-- Sidebar - Upcoming Maintenance -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Upcoming Maintenance</h5>
-                </div>
-                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
-                    <p class="text-muted text-center py-4">
-                        <i class="fas fa-clock"></i> Upcoming maintenance will be displayed here
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <div id="root"></div>
@@ -956,8 +455,8 @@
 <script>
     window.__conditionalReport = {
         technicianName: "{{ current_user.full_name if current_user else 'Technicien' }}",
-        machineName: "{{ machine.name if machine else '' }}",
-        zone: "{{ machine.zone if machine and machine.zone else '' }}"
+        machineName: "{{ machine.machine_code }} - {{ machine.machine_name }}",
+        zone: "{{ zone.name if zone else '' }}"
     };
 </script>
 {% endif %}
@@ -989,13 +488,13 @@
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Type de machine</label>
-                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.name if machine else 'N/A' }}</p>
-                    <input type="hidden" name="machine" value="{{ machine.name if machine else '' }}">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.machine_code }} - {{ machine.machine_name }}</p>
+                    <input type="hidden" name="machine" value="{{ machine.machine_name }}">
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Zone / Workstation</label>
-                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.zone if machine and machine.zone else 'N/A' }}</p>
-                    <input type="hidden" name="machineArea" value="{{ machine.zone if machine and machine.zone else '' }}">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ zone.name if zone else 'N/A' }}</p>
+                    <input type="hidden" name="machineArea" value="{{ zone.name if zone else '' }}">
                 </div>
             </div>
             {% else %}

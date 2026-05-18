@@ -1418,9 +1418,13 @@ def conditional_maintenance_report():
             return redirect(request.referrer or url_for('main.dashboard'))
     
     # GET - Render the form
-    # Check for URL parameters (zone_id and machine_ids)
+    # Check for URL parameters (zone_id and machine_ids/machine_id)
     zone_id = request.args.get('zone_id', type=int)
     machine_id = request.args.get('machine_id', type=int)
+    machine_ids = request.args.get('machine_ids', type=int)  # Support both singular and plural
+    
+    # Prefer machine_ids if provided, otherwise use machine_id
+    final_machine_id = machine_ids or machine_id
     
     zone = None
     machine = None
@@ -1434,8 +1438,8 @@ def conditional_maintenance_report():
         zone = Zone.query.get(zone_id)
     
     # Fetch specific machine if provided
-    if machine_id:
-        machine = Machine.query.get(machine_id)
+    if final_machine_id:
+        machine = Machine.query.get(final_machine_id)
     
     # Get today's date for auto-fill
     today_date = datetime.now().strftime('%Y-%m-%d')
