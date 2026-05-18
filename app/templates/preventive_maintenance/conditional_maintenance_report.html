@@ -4,26 +4,397 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
-<!-- React and ReactDOM from CDN -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<!-- Babel Standalone for JSX transpilation -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
 <style>
-    :root {
-        --color-primary: #185fa5;
-        --color-success: #2d8a4e;
-        --color-danger: #c0392b;
-        --color-warning: #BA7517;
-        --color-neutral: #888780;
-        --color-text-primary: #2c3e50;
-        --color-text-secondary: #7f8c8d;
-        --color-border: #ecf0f1;
-        --color-bg: #f8f9fa;
-        --border-radius-md: 8px;
-        --border-radius-lg: 12px;
-        --font-sans: system-ui, -apple-system, sans-serif;
+    body {
+        background: #f9fafb;
     }
+
+    .category-header {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .category-header h2 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .category-header .task-stats {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin-top: 0.5rem;
+    }
+
+    .filter-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .filter-input {
+        flex: 1;
+        border: none;
+        padding: 0.75rem;
+        background: #f3f4f6;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        background: #e5e7eb;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .filter-icon {
+        color: #059669;
+        font-size: 1.25rem;
+    }
+
+    .filter-count {
+        background: #d1fae5;
+        color: #047857;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        background: #f3f4f6;
+        padding: 1rem;
+        font-weight: 600;
+        color: #059669;
+        border-bottom: 2px solid #10b981;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        font-size: 1.2rem;
+        color: #059669;
+    }
+
+    .maintenance-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .maintenance-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .maintenance-table thead {
+        background: #f3f4f6;
+    }
+
+    .maintenance-table thead th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #059669;
+        border-bottom: 2px solid #10b981;
+    }
+
+    .maintenance-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .maintenance-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .task-number {
+        font-weight: 600;
+        color: #059669;
+        width: 60px;
+        text-align: center;
+    }
+
+    .status-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        background: white;
+        width: 100%;
+    }
+
+    .status-select:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .status-select:disabled {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .remarks-input {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 40px;
+        width: 100%;
+    }
+
+    .remarks-input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .btn-action-start {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-action-start:hover {
+        background: #059669;
+    }
+
+    .btn-action-stop {
+        background: #d1d5db;
+        color: #6b7280;
+    }
+
+    .btn-action-stop:hover {
+        background: #9ca3af;
+    }
+
+    .footer-stats {
+        background: #f0fdf4;
+        border-top: 2px solid #10b981;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #059669;
+    }
+
+    .stat-item .stat-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 0.75rem;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 2rem;
+    }
+
+    .btn-submit:hover {
+        background: #059669;
+    }
+
+    .check-item {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .check-item:last-child {
+        border-bottom: none;
+    }
+
+    .check-label-main {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.95rem;
+    }
+
+    .check-label-note {
+        font-size: 0.85rem;
+        color: #9ca3af;
+    }
+
+    .status-group {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .status-btn {
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1.5px solid;
+        background: transparent;
+        transition: all 0.2s;
+    }
+
+    .status-btn.ok {
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .status-btn.ok.active {
+        background-color: #10b981;
+        color: white;
+    }
+
+    .status-btn.nok {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+    .status-btn.nok.active {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    .status-btn.na {
+        border-color: #9ca3af;
+        color: #9ca3af;
+    }
+
+    .status-btn.na.active {
+        background-color: #9ca3af;
+        color: white;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-primary:hover {
+        background: #d1d5db;
+    }
+
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #059669;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+</style>
 
     body {
         font-family: var(--font-sans);
@@ -334,11 +705,250 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
+    } .btn-success {
+        background-color: var(--color-success);
+        color: #fff;
+        border-color: var(--color-success);
+    }
+
+    .btn-success:hover {
+        opacity: 0.9;
+    }
+
+    .btn-success:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .success-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        border: 0.5px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        background: #fff;
+    }
+
+    .success-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: var(--color-success);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 12px rgba(45, 138, 78, 0.2);
+    }
+
+    .success-icon i {
+        font-size: 32px;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .success-message h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .success-message p {
+        color: var(--color-text-secondary);
+        margin: 0 0 24px;
+        font-weight: 500;
+    }
+
+    .success-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 0 0 28px;
+    }
+
+    .stat-box {
+        padding: 12px;
+        background-color: var(--color-bg);
+        border-radius: var(--border-radius-md);
+        border: 0.5px solid var(--color-border);
+    }
+
+    .stat-value {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        margin: 0;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    /* Calendar Styles */
+    .fc {
+        font-family: inherit;
+    }
+    .fc .fc-button-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    .calendar-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .event-info {
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .event-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 3px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    /* Date range button styling */
+    .date-range-btn {
+        transition: all 0.3s ease;
+        margin-right: 5px;
+    }
+    .date-range-btn.active {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+        color: white !important;
+    }
+    .date-range-btn:hover:not(.active) {
+        background-color: #f8f9fa;
+    }
+    .btn-group .date-range-btn {
+        border-radius: 0;
+    }
+    .btn-group .date-range-btn:first-child {
+        border-radius: 0.25rem 0 0 0.25rem;
+    }
+    .btn-group .date-range-btn:last-child {
+        border-radius: 0 0.25rem 0.25rem 0;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Machine Selection Filter Section -->
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-calendar-check"></i> Conditional Preventive Maintenance Report
+            </h1>
+            <p class="text-muted">View and track preventive maintenance tasks by machine and date range</p>
+        </div>
+        <div class="col-md-4">
+            <form method="GET" class="form-inline" id="filterForm">
+                <select name="machine_id" class="form-control form-control-sm mr-2" id="machineSelect" onchange="this.form.submit()">
+                    <option value="">-- Select Machine --</option>
+                    {% for machine in machines %}
+                    <option value="{{ machine.id }}" {% if selected_machine and selected_machine.id == machine.id %}selected{% endif %}>
+                        {{ machine.machine_code }} - {{ machine.machine_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <select name="zone_id" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Zones</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}" {% if selected_zone and selected_zone.id == zone.id %}selected{% endif %}>
+                        {{ zone.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Date Range Filter (visible when machine is selected) -->
+    {% if selected_machine %}
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-filter"></i> View Period:
+                    </h6>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn active" data-range="1">
+                            <i class="fas fa-calendar"></i> 1 Month
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="3">
+                            <i class="fas fa-calendar"></i> 3 Months
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="6">
+                            <i class="fas fa-calendar"></i> 6 Months
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> Select a date range to filter the report. Default: 1 Month
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Please select a machine</strong> from the dropdown above to begin viewing reports and schedule preventive maintenance tasks.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Calendar Section (visible when machine is selected) -->
+    {% if selected_machine %}
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="calendar-wrapper">
+                <div id="calendar"></div>
+            </div>
+        </div>
+        
+        <!-- Sidebar - Upcoming Maintenance -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Upcoming Maintenance</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <p class="text-muted text-center py-4">
+                        <i class="fas fa-clock"></i> Upcoming maintenance will be displayed here
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
 <div id="root"></div>
 
 <!-- Pass pre-selected data to window for React component -->
@@ -349,9 +959,10 @@
         machineName: "{{ machine.name if machine else '' }}",
         zone: "{{ machine.zone if machine and machine.zone else '' }}"
     };
+</script>
+{% endif %}
 
-
-    <form method="POST" id="conditionalReportForm">
+<form method="POST" id="conditionalReportForm">
         <!-- SECTION 1: Informations générales -->
         <div class="form-section">
             <div class="section-title">
@@ -373,8 +984,8 @@
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Date d'intervention</label>
-                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ now.strftime('%d/%m/%Y') if now else '' }}</p>
-                    <input type="hidden" name="date" value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ today_date if today_date else '' }}</p>
+                    <input type="hidden" name="date" value="{{ today_date if today_date else '' }}">
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Type de machine</label>
@@ -396,7 +1007,7 @@
                 </div>
                 <div class="form-group">
                     <label>Date d'intervention *</label>
-                    <input type="date" name="date" value="{{ now.strftime('%Y-%m-%d') if now else '' }}" required>
+                    <input type="date" name="date" value="{{ today_date if today_date else '' }}" required>
                 </div>
                 <div class="form-group">
                     <label>Type de machine *</label>
@@ -931,6 +1542,85 @@ document.querySelectorAll('.status-btn').forEach(btn => {
         // Update hidden input
         const input = document.querySelector(`input[name="${field}"]`);
         if (input) input.value = value;
+    });
+});
+
+// Calendar variables
+let currentDateRange = '1';  // Store current date range selection
+let calendarInstance = null;  // Store calendar reference
+
+// Initialize calendar when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Only initialize if calendar element exists
+    var calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
+    
+    calendarInstance = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: function(info, successCallback, failureCallback) {
+            var machineId = '{{ selected_machine.id if selected_machine else "" }}';
+            var apiUrl = `{{ url_for('preventive.calendar_api') }}`;
+            
+            // Add query parameters
+            if (machineId) {
+                apiUrl += `?machine_id=${machineId}&date_range=${currentDateRange}`;
+            }
+            
+            fetch(apiUrl)
+                .then(r => r.json())
+                .then(events => {
+                    if (Array.isArray(events)) {
+                        successCallback(events);
+                    } else if (events.events) {
+                        successCallback(events.events);
+                    } else {
+                        successCallback([]);
+                    }
+                })
+                .catch(e => {
+                    console.error('Error loading calendar events:', e);
+                    successCallback([]);
+                });
+        },
+        eventClick: function(info) {
+            var event = info.event;
+            alert('Event: ' + event.title + '\nDate: ' + event.start.toLocaleDateString());
+        }
+    });
+    calendarInstance.render();
+});
+
+// Date range filter buttons handler
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRangeButtons = document.querySelectorAll('.date-range-btn');
+    
+    dateRangeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const range = this.getAttribute('data-range');
+            
+            // Update button active state
+            dateRangeButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-primary');
+                btn.classList.remove('btn-primary');
+            });
+            
+            this.classList.add('active');
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+            
+            // Store selected range in sessionStorage for filtering
+            sessionStorage.setItem('dateRange', range);
+            
+            // You can add additional filtering logic here if needed
+            console.log('Selected date range: ' + range + ' months');
+        });
     });
 });
 

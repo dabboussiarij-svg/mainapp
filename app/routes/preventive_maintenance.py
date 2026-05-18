@@ -572,22 +572,68 @@ def calendar_view():
 def calendar_api():
     """API endpoint for calendar events"""
     from sqlalchemy.orm import joinedload
+    from datetime import timedelta
     
     user = User.query.get(session['user_id'])
     machine_id = request.args.get('machine_id', '')
+    zone_id = request.args.get('zone_id', '')
+    date_range = request.args.get('date_range', '1')  # 1, 3, or 6 months
     
     query = PreventiveMaintenanceExecution.query.options(
         joinedload(PreventiveMaintenanceExecution.machine),
         joinedload(PreventiveMaintenanceExecution.plan)
     )
     
+    # Apply role-based filtering - but show all events for admins/supervisors viewing
+    # Only technicians see only their assigned events
+    if user.role == 'technician':
+        query = query.filter(
+            (PreventiveMaintenanceExecution.assigned_technician_id == user.id) |
+            (PreventiveMaintenanceExecution.assigned_technician_id == None)
+        )
+    # Supervisors and admins see all events
+    # No filtering needed
+    
+    # Apply machine filter if selected
     if machine_id:
         query = query.filter_by(machine_id=machine_id)
     
-    if user.role == 'technician':
-        query = query.filter_by(assigned_technician_id=user.id)
-    elif user.role == 'supervisor':
-        query = query.filter_by(assigned_supervisor_id=user.id)
+    # Apply zone filter if selected
+    if zone_id:
+        # Filter machines by zone, then filter executions by those machines
+        machines_in_zone = Machine.query.filter_by(zone_id=zone_id).all()
+        machine_ids = [m.id for m in machines_in_zone]
+        if machine_ids:
+            query = query.filter(PreventiveMaintenanceExecution.machine_id.in_(machine_ids))
+    
+    # Apply date range filter
+    today = date.today()
+    months = int(date_range)
+    
+    # Calculate end date based on range
+    if months == 999:  # Special case for "All" - show all events
+        # No date filtering - show all events
+        pass
+    elif months == 1:
+        end_date = today + timedelta(days=30)
+        query = query.filter(
+            PreventiveMaintenanceExecution.scheduled_date <= end_date
+        )
+    elif months == 3:
+        end_date = today + timedelta(days=90)
+        query = query.filter(
+            PreventiveMaintenanceExecution.scheduled_date <= end_date
+        )
+    elif months == 6:
+        end_date = today + timedelta(days=180)
+        query = query.filter(
+            PreventiveMaintenanceExecution.scheduled_date <= end_date
+        )
+    else:
+        end_date = today + timedelta(days=30)
+        query = query.filter(
+            PreventiveMaintenanceExecution.scheduled_date <= end_date
+        )
     
     executions = query.all()
     
@@ -1260,7 +1306,7 @@ def conditional_maintenance_history():
 
 @preventive_bp.route('/conditional/report', methods=['GET', 'POST'])
 @login_required
-@role_required('technician')
+@role_required('technician', 'admin')
 def conditional_maintenance_report():
     """Interactive conditional maintenance report form"""
     user = User.query.get(session['user_id'])
@@ -1372,9 +1418,38 @@ def conditional_maintenance_report():
             return redirect(request.referrer or url_for('main.dashboard'))
     
     # GET - Render the form
+    # Check for URL parameters (zone_id and machine_ids)
+    zone_id = request.args.get('zone_id', type=int)
+    machine_id = request.args.get('machine_id', type=int)
+    
+    zone = None
+    machine = None
+    
+    # Fetch all machines and zones for dropdown
+    machines = Machine.query.filter_by(status='active').all()
+    zones = Zone.query.all()
+    
+    # Fetch specific zone if provided
+    if zone_id:
+        zone = Zone.query.get(zone_id)
+    
+    # Fetch specific machine if provided
+    if machine_id:
+        machine = Machine.query.get(machine_id)
+    
+    # Get today's date for auto-fill
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    
     return render_template(
         'preventive_maintenance/conditional_maintenance_report.html',
         current_user=user,
+        machine=machine,
+        selected_machine=machine,
+        zone=zone,
+        selected_zone=zone,
+        machines=machines,
+        zones=zones,
+        today_date=today_date,
         machine_types=[
             {'value': 'KOMAX 355', 'label': 'KOMAX 355'},
             {'value': 'PS9550', 'label': 'PS9550'},
