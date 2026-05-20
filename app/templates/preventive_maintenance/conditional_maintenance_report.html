@@ -10,6 +10,7 @@
         background: #f9fafb;
     }
 
+    /* Main header with gradient */
     .category-header {
         background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         color: white;
@@ -30,6 +31,7 @@
         margin-top: 0.5rem;
     }
 
+    /* Filter section */
     .filter-section {
         display: flex;
         align-items: center;
@@ -70,221 +72,153 @@
         font-weight: 500;
     }
 
+    /* Calendar Styles */
+    .fc {
+        font-family: inherit;
+    }
+    .fc .fc-button-primary {
+        background-color: #059669;
+        border-color: #059669;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #047857;
+        border-color: #047857;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #047857;
+        border-color: #047857;
+    }
+    
+    .calendar-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Date range button styling */
+    .date-range-btn {
+        transition: all 0.3s ease;
+        margin-right: 5px;
+        background-color: white;
+        border: 1px solid #059669;
+        color: #059669;
+    }
+    .date-range-btn.active {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
+        color: white !important;
+    }
+    .date-range-btn:hover:not(.active) {
+        background-color: #f0fdf4;
+    }
+    .btn-group .date-range-btn {
+        border-radius: 0;
+    }
+    .btn-group .date-range-btn:first-child {
+        border-radius: 0.25rem 0 0 0.25rem;
+    }
+    .btn-group .date-range-btn:last-child {
+        border-radius: 0 0.25rem 0.25rem 0;
+    }
+
+    /* Filter form styling */
+    .form-inline {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .form-control-sm {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: white;
+    }
+
+    .form-control-sm:focus {
+        outline: none;
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    /* Card styling */
+    .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #059669;
+        border-bottom: 1px solid #047857;
+    }
+
+    /* Form section styling */
     .form-section {
         background: white;
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
-        overflow: hidden;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         margin-bottom: 1.5rem;
+        padding: 1.5rem;
     }
 
     .section-title {
-        background: #f3f4f6;
-        padding: 1rem;
-        font-weight: 600;
-        color: #059669;
-        border-bottom: 2px solid #10b981;
-        font-size: 1rem;
         display: flex;
         align-items: center;
         gap: 8px;
-    }
-
-    .section-title i {
-        font-size: 1.2rem;
-        color: #059669;
-    }
-
-    .maintenance-table {
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .maintenance-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .maintenance-table thead {
-        background: #f3f4f6;
-    }
-
-    .maintenance-table thead th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #059669;
-        border-bottom: 2px solid #10b981;
-    }
-
-    .maintenance-table tbody td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .maintenance-table tbody tr:hover {
-        background: #f9fafb;
-    }
-
-    .task-number {
-        font-weight: 600;
-        color: #059669;
-        width: 60px;
-        text-align: center;
-    }
-
-    .status-select {
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        background: white;
-        width: 100%;
-    }
-
-    .status-select:focus {
-        outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-
-    .status-select:disabled {
-        background: #f3f4f6;
-        border-color: #d1d5db;
-        color: #9ca3af;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .remarks-input {
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-family: inherit;
-        resize: vertical;
-        min-height: 40px;
-        width: 100%;
-    }
-
-    .remarks-input:focus {
-        outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-    }
-
-    .btn-action {
-        padding: 0.5rem 0.75rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-weight: 500;
-    }
-
-    .btn-action-start {
-        background: #10b981;
-        color: white;
-    }
-
-    .btn-action-start:hover {
-        background: #059669;
-    }
-
-    .btn-action-stop {
-        background: #d1d5db;
-        color: #6b7280;
-    }
-
-    .btn-action-stop:hover {
-        background: #9ca3af;
-    }
-
-    .footer-stats {
-        background: #f0fdf4;
-        border-top: 2px solid #10b981;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 0 0 8px 8px;
-    }
-
-    .stat-item {
-        text-align: center;
-    }
-
-    .stat-item .stat-value {
-        font-size: 1.5rem;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #059669;
+        font-size: 16px;
         font-weight: 700;
         color: #059669;
     }
 
-    .stat-item .stat-label {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
+    .section-title i {
+        font-size: 18px;
+        color: #059669;
     }
 
-    .btn-submit {
-        width: 100%;
-        padding: 0.75rem;
-        background: #10b981;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 2rem;
-    }
-
-    .btn-submit:hover {
-        background: #059669;
-    }
-
-    .check-item {
+    /* Grid 2 */
+    .grid-2 {
         display: grid;
-        grid-template-columns: 1fr 2fr 1fr auto;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    /* Check items */
+    .check-item {
+        display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1rem;
+        gap: 10px;
+        padding: 10px 0;
         border-bottom: 1px solid #e5e7eb;
     }
 
-    .check-item:last-child {
-        border-bottom: none;
-    }
-
     .check-label-main {
+        font-size: 14px;
         font-weight: 600;
         color: #374151;
-        font-size: 0.95rem;
     }
 
     .check-label-note {
-        font-size: 0.85rem;
+        font-size: 12px;
         color: #9ca3af;
     }
 
     .status-group {
         display: flex;
-        gap: 0.5rem;
-        justify-content: flex-end;
+        gap: 6px;
+        margin-left: auto;
     }
 
     .status-btn {
-        padding: 0.5rem 0.75rem;
+        padding: 6px 12px;
         border-radius: 4px;
-        font-size: 0.85rem;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         border: 1.5px solid;
@@ -293,22 +227,22 @@
     }
 
     .status-btn.ok {
-        border-color: #10b981;
-        color: #10b981;
+        border-color: #059669;
+        color: #059669;
     }
 
     .status-btn.ok.active {
-        background-color: #10b981;
+        background-color: #059669;
         color: white;
     }
 
     .status-btn.nok {
-        border-color: #ef4444;
-        color: #ef4444;
+        border-color: #dc2626;
+        color: #dc2626;
     }
 
     .status-btn.nok.active {
-        background-color: #ef4444;
+        background-color: #dc2626;
         color: white;
     }
 
@@ -322,32 +256,29 @@
         color: white;
     }
 
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
+    /* Form group */
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
     }
 
     .form-group label {
         display: block;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
+        font-size: 11px;
+        font-weight: 700;
+        color: #059669;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
     }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 8px 10px;
         border: 1px solid #d1d5db;
         border-radius: 4px;
-        font-size: 0.9rem;
+        font-size: 14px;
         font-family: inherit;
     }
 
@@ -355,112 +286,181 @@
     .form-group select:focus,
     .form-group textarea:focus {
         outline: none;
-        border-color: #10b981;
+        border-color: #059669;
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 4px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    /* Alert */
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #a7f3d0;
+        background-color: #f0fdf4;
+        color: #047857;
     }
 
-    .btn-primary {
-        background: #e5e7eb;
-        color: #374151;
+    .alert i {
+        margin-right: 8px;
     }
 
-    .btn-primary:hover {
-        background: #d1d5db;
-    }
-
-    .btn-success {
-        background: #10b981;
-        color: white;
-    }
-
-    .btn-success:hover {
-        background: #059669;
+    /* Container styling */
+    .container-fluid {
+        max-width: 1200px;
     }
 
     .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
+        padding: 0 1rem;
+    }
+
+    /* Additional button styling */
+    .btn-outline-primary {
+        border-color: #059669;
+        color: #059669;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #059669;
+        border-color: #059669;
+        color: white;
+    }
+
+    .btn-outline-primary:not(:disabled).active {
+        background-color: #059669;
+        border-color: #059669;
+        color: white;
+    }
+
+    /* Text utilities */
+    .text-muted {
+        color: #9ca3af;
+    }
+
+    .d-block {
+        display: block;
+    }
+
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+
+    .mb-0 {
+        margin-bottom: 0;
+    }
+
+    .py-4 {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    /* Text color */
+    .text-center {
+        text-align: center;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Machine Selection Filter Section -->
 <div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>
-                <i class="fas fa-calendar-check"></i> Conditional Preventive Maintenance Report
-            </h1>
-            <p class="text-muted">View and track preventive maintenance tasks by machine and date range</p>
-        </div>
-        <!-- Only show filter form if no machine is pre-selected -->
-        {% if not machine %}
-        <div class="col-md-4">
-            <form method="GET" class="form-inline" id="filterForm">
-                <select name="machine_id" class="form-control form-control-sm mr-2" id="machineSelect" onchange="this.form.submit()">
-                    <option value="">-- Select Machine --</option>
-                    {% for machine_option in machines %}
-                    <option value="{{ machine_option.id }}" {% if selected_machine and selected_machine.id == machine_option.id %}selected{% endif %}>
-                        {{ machine_option.machine_code }} - {{ machine_option.machine_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <select name="zone_id" class="form-control form-control-sm" onchange="this.form.submit()">
-                    <option value="">All Zones</option>
-                    {% for zone_option in zones %}
-                    <option value="{{ zone_option.id }}" {% if selected_zone and selected_zone.id == zone_option.id %}selected{% endif %}>
-                        {{ zone_option.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-        {% else %}
-        <!-- Show selected machine and zone info when pre-filled from URL -->
-        <div class="col-md-4">
-            <div class="alert alert-primary" role="alert">
-                <strong>Selected:</strong><br>
-                <i class="fas fa-industry"></i> <strong>Machine:</strong> {{ machine.machine_code }} - {{ machine.machine_name }}<br>
-                {% if zone %}<i class="fas fa-map-marker-alt"></i> <strong>Zone:</strong> {{ zone.name }}{% endif %}
-                <br>
-                <small><a href="{{ url_for('preventive.conditional_maintenance_report') }}" class="alert-link">Change Selection</a></small>
-            </div>
-        </div>
-        {% endif %}
+    <!-- Header Section -->
+    <div class="category-header mb-4">
+        <h2>
+            <i class="fas fa-calendar-check"></i> Conditional Preventive Maintenance Report
+        </h2>
+        <p class="task-stats">
+            <i class="fas fa-info-circle"></i> View and track preventive maintenance tasks by machine and date range
+        </p>
     </div>
 
+    <!-- Machine Selection Filter Section -->
+    <div class="filter-section">
+        <i class="fas fa-filter filter-icon"></i>
+        <form method="GET" class="form-inline" id="filterForm" style="flex: 1;">
+            <select name="machine_id" class="filter-input" id="machineSelect" onchange="this.form.submit()">
+                <option value="">-- Select Machine --</option>
+                {% for machine in machines %}
+                <option value="{{ machine.id }}" {% if selected_machine and selected_machine.id == machine.id %}selected{% endif %}>
+                    {{ machine.machine_code }} - {{ machine.machine_name }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="zone_id" class="filter-input" onchange="this.form.submit()">
+                <option value="">All Zones</option>
+                {% for zone in zones %}
+                <option value="{{ zone.id }}" {% if selected_zone and selected_zone.id == zone.id %}selected{% endif %}>
+                    {{ zone.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Date Range Filter (visible when machine is selected) -->
+    {% if selected_machine %}
+    <div class="mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="section-title" style="margin-bottom: 1rem; border: none;">
+                    <i class="fas fa-calendar"></i> View Period
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm date-range-btn active" data-range="1">
+                        <i class="fas fa-calendar"></i> 1 Month
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="3">
+                        <i class="fas fa-calendar"></i> 3 Months
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm date-range-btn" data-range="6">
+                        <i class="fas fa-calendar"></i> 6 Months
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="fas fa-info-circle"></i> Select a date range to filter the report. Default: 1 Month
+                </small>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="mb-3">
+        <div class="alert" role="alert">
+            <i class="fas fa-info-circle"></i> 
+            <strong>Please select a machine</strong> from the filter above to begin viewing reports and schedule preventive maintenance tasks.
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Calendar Section (visible when machine is selected) -->
-    {% if machine %}
-    <div class="row mb-3">
+    {% if selected_machine %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="calendar-wrapper">
+                <div id="calendar"></div>
+            </div>
+        </div>
+        
+        <!-- Sidebar - Upcoming Maintenance -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Upcoming Maintenance
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <p class="text-muted text-center py-4">
+                        <i class="fas fa-info-circle"></i> Upcoming maintenance will be displayed here
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-<div id="root"></div>
-
-<!-- Pass pre-selected data to window for React component -->
-{% if machine %}
-<script>
-    window.__conditionalReport = {
-        technicianName: "{{ current_user.full_name if current_user else 'Technicien' }}",
-        machineName: "{{ machine.machine_code }} - {{ machine.machine_name }}",
-        zone: "{{ zone.name if zone else '' }}"
-    };
-</script>
-{% endif %}
-
+<div class="container mt-4">
 <form method="POST" id="conditionalReportForm">
         <!-- SECTION 1: Informations générales -->
         <div class="form-section">
@@ -488,13 +488,13 @@
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Type de machine</label>
-                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.machine_code }} - {{ machine.machine_name }}</p>
-                    <input type="hidden" name="machine" value="{{ machine.machine_name }}">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.name if machine else 'N/A' }}</p>
+                    <input type="hidden" name="machine" value="{{ machine.name if machine else '' }}">
                 </div>
                 <div style="padding: 12px; background: var(--color-bg); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border);">
                     <label style="font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 6px; display: block;">Zone / Workstation</label>
-                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ zone.name if zone else 'N/A' }}</p>
-                    <input type="hidden" name="machineArea" value="{{ zone.name if zone else '' }}">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ machine.zone if machine and machine.zone else 'N/A' }}</p>
+                    <input type="hidden" name="machineArea" value="{{ machine.zone if machine and machine.zone else '' }}">
                 </div>
             </div>
             {% else %}
@@ -1150,5 +1150,6 @@ document.getElementById('conditionalReportForm').addEventListener('submit', (e) 
     document.getElementById('conditionalReportForm').submit();
 });
 </script>
+</div>
 {% endblock %}
 
