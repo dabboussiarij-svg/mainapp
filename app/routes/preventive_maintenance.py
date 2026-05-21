@@ -677,14 +677,15 @@ def archive():
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
     
-    # Query PreventiveMaintenanceExecution records
+    # Query PreventiveMaintenanceExecution records (archived executions)
     execution_query = PreventiveMaintenanceExecution.query.filter(
-        PreventiveMaintenanceExecution.status.in_(['completed', 'cancelled'])
+        PreventiveMaintenanceExecution.archive_date.isnot(None)  # Only archived
     )
     
-    # Query MaintenanceReport records with report_type='preventive'
+    # Query MaintenanceReport records with report_type='preventive' (archived reports)
     report_query = MaintenanceReport.query.filter(
-        MaintenanceReport.report_type == 'preventive'
+        MaintenanceReport.report_type == 'preventive',
+        MaintenanceReport.archive_date.isnot(None)  # Only archived
     )
     
     # Role-based filtering for executions
